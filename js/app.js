@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    APP.JS â€” OCR multi-formato para tarjetas de seguro mÃ©dico
    Soporta: Ambetter, Amerigroup, BlueCross, Christus, Molina
    y cualquier otro asegurador comÃºn de Texas/USA
@@ -773,6 +773,204 @@ function confirmarAutorizacion(decision) {
   _doSubmit();
 }
 
+// -- EMAILJS CONFIG ------------------------------------------
+// Get these 3 values from https://www.emailjs.com/
+const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // Account > API Keys
+const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // Email Services tab
+const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // Email Templates tab
+// ------------------------------------------------------------
+
+// -- GENERATE HTML REPORT ------------------------------------
+function generateEmailHTML(data) {
+  const esApto = data.resultado === "APTO";
+  const verde  = "#10b981";
+  const rojo   = "#ef4444";
+  const morado = "#7c3aed";
+  const azul   = "#3b82f6";
+
+  const f = (val) => val || "—";
+  const fila = (label, valor, color="") => `
+    <tr>
+      <td style="padding:8px 14px;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;
+                 letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid #2d2d3d;">${label}</td>
+      <td style="padding:8px 14px;font-size:14px;color:${color||"#e2e8f0"};border-bottom:1px solid #2d2d3d;
+                 font-weight:${color?"700":"400"};">${f(valor)}</td>
+    </tr>`;
+
+  const imgFront = data.b64Front
+    ? `<img src="${data.b64Front}" alt="Front of card" style="width:100%;max-width:280px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;"/>`
+    : `<div style="width:100%;height:100px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
+  const imgBack = data.b64Back
+    ? `<img src="${data.b64Back}" alt="Back of card" style="width:100%;max-width:280px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;"/>`
+    : `<div style="width:100%;height:100px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MedAuth Pro — Insurance Verification Report</title></head>
+<body style="margin:0;padding:0;background:#0f0f1a;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f1a;min-height:100vh;">
+<tr><td align="center" style="padding:40px 20px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:660px;background:#16162a;border:1px solid #2d2d3d;border-radius:16px;overflow:hidden;">
+
+<!-- HEADER -->
+<tr><td style="background:linear-gradient(135deg,#7c3aed,#3b82f6);padding:32px 36px;text-align:center;">
+  <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,0.7);margin-bottom:8px;">MedAuth Pro</div>
+  <div style="font-size:26px;font-weight:800;color:#fff;margin:0 0 6px;letter-spacing:-.02em;">Medical Insurance Verification</div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.75);">Bariatric Surgery · Automated Report</div>
+</td></tr>
+
+<!-- ELIGIBILITY -->
+<tr><td style="padding:28px 36px;text-align:center;background:${esApto?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.07)"};border-bottom:1px solid ${esApto?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"};">
+  <div style="font-size:44px;margin-bottom:10px;">${esApto?"🎉":"⚠️"}</div>
+  <div style="display:inline-block;padding:8px 24px;border-radius:99px;font-size:22px;font-weight:800;background:${esApto?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};color:${esApto?verde:rojo};border:2px solid ${esApto?verde:rojo};">
+    ${esApto?"✅ ELIGIBLE":"❌ NOT ELIGIBLE"}
+  </div>
+  <p style="color:${esApto?"#a7f3d0":"#fca5a5"};font-size:14px;margin:12px 0 0;line-height:1.5;">
+    ${esApto
+      ? `<strong style="color:#fff;">${f(data.nombre)}</strong> meets the eligibility criteria for bariatric surgery.`
+      : `<strong style="color:#fff;">${f(data.nombre)}</strong> does NOT meet all the criteria at this time.`}
+  </p>
+</td></tr>
+
+<!-- AUTHORIZATION DECISION -->
+<tr><td style="padding:20px 36px;text-align:center;border-bottom:1px solid #2d2d3d;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:10px;">
+    Procedure Authorization Decision
+  </div>
+  <div style="display:inline-block;padding:10px 28px;border-radius:12px;font-size:18px;font-weight:800;
+              background:${data.autorizacionFinal==="AUTHORIZED"?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)"};
+              color:${data.autorizacionFinal==="AUTHORIZED"?verde:rojo};
+              border:2px solid ${data.autorizacionFinal==="AUTHORIZED"?verde:rojo};">
+    ${data.autorizacionFinal==="AUTHORIZED"?"✅ AUTHORIZED":"❌ NOT AUTHORIZED"}
+  </div>
+</td></tr>
+
+<tr><td style="padding:28px 36px;">
+
+<!-- CARD IMAGES -->
+<div style="background:#1e1e2e;border:1px solid #2d2d3d;border-radius:12px;padding:20px;margin-bottom:28px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:${azul};margin-bottom:16px;border-bottom:1px solid #2d2d3d;padding-bottom:10px;">
+    💳 Insurance Card — Captured Images
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td width="50%" style="padding-right:8px;vertical-align:top;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${morado};letter-spacing:.1em;margin-bottom:8px;">🪪 Front</div>
+      ${imgFront}
+    </td>
+    <td width="50%" style="padding-left:8px;vertical-align:top;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#06b6d4;letter-spacing:.1em;margin-bottom:8px;">🔄 Back</div>
+      ${imgBack}
+    </td>
+  </tr></table>
+</div>
+
+<!-- INSURANCE IDENTIFICATION -->
+<div style="margin-bottom:24px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${morado};margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">🪪 Insurance Identification</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
+    ${fila("Patient",             data.nombre,        "#e2e8f0")}
+    ${fila("Insurance Company",   data.aseguradora,   "#c4b5fd")}
+    ${fila("Subscriber Name",     data.subscriberName)}
+    ${fila("Member Name",         data.memberName)}
+    ${fila("Member ID / ID #",    data.memberId,      "#93c5fd")}
+    ${fila("Subscriber ID",       data.subscriberId)}
+    ${fila("Group Number",        data.groupNum,      "#93c5fd")}
+    ${fila("Plan Name",           data.planName)}
+    ${fila("Plan Type",           data.planType)}
+    ${fila("Effective Date",      data.effectiveDate)}
+    ${fila("Date of Birth (DOB)", data.dob)}
+    ${fila("Network",             data.network)}
+    ${fila("Type of Coverage",    data.coverage)}
+  </table>
+</div>
+
+<!-- COPAYS -->
+<div style="margin-bottom:24px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#06b6d4;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">💊 Copays &amp; Medical Costs</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
+    ${fila("PCP / Primary Care Copay", data.copayPCP)}
+    ${fila("Specialist Copay",         data.copaySpec)}
+    ${fila("Emergency Room (ER)",      data.copayER)}
+    ${fila("Urgent Care",              data.copayUrgent)}
+    ${fila("Deductible (Med/Rx)",      data.deductible)}
+    ${fila("Coinsurance",              data.coinsurance)}
+  </table>
+</div>
+
+<!-- PHARMACY -->
+${data.rxBin||data.rxPcn||data.rxGrp ? `
+<div style="margin-bottom:24px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${azul};margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">💊 Pharmacy Plan</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
+    ${fila("RxBIN", data.rxBin)}
+    ${fila("RxPCN", data.rxPcn)}
+    ${fila("RxGRP", data.rxGrp)}
+  </table>
+</div>` : ""}
+
+<!-- CONTACTS -->
+<div style="margin-bottom:24px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">📞 Contacts &amp; PCP</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
+    ${fila("Member Services Phone", data.phoneSeguro,   "#6ee7b7")}
+    ${fila("Prior Auth Phone",      data.phoneAuth)}
+    ${fila("PCP Name",              data.pcpName)}
+    ${fila("PCP Phone",             data.pcpPhone)}
+    ${fila("Website",               data.website)}
+  </table>
+</div>
+
+<!-- VERIFICATION SCRIPT -->
+<div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${esApto?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${esApto?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+    ${fila("1. Covered?",                 data.cobertura,      ["Si","Parcial"].includes(data.cobertura)?verde:rojo)}
+    ${fila("2. Prior Authorization?",     data.autorizacion,   data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida")?verde:rojo)}
+    ${fila("3. PCP Referral?",            data.referencia)}
+    ${fila("4. Specific Facility?",       data.facilidad)}
+    ${data.facilidadDetalle ? fila("   Facility Detail", data.facilidadDetalle) : ""}
+    ${fila("5. Total Deductible (call)",  data.deducibleTotal)}
+    ${fila("   Deductible Met",           data.deducibleMet)}
+    ${fila("   Copay/Coinsurance (call)", data.copago)}
+    ${fila("   Out-of-Pocket Max.",       data.oopMax)}
+    ${fila("Insurance Rep.",              data.repName)}
+    ${fila("Reference Number",            data.refNum)}
+  </table>
+  ${data.notasRep ? `
+  <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid #2d2d3d;">
+    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Additional Notes</div>
+    <div style="font-size:14px;color:#cbd5e1;line-height:1.6;">${data.notasRep}</div>
+  </div>` : ""}
+</div>
+
+<!-- RECORD META -->
+<div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:14px 18px;text-align:center;margin-bottom:16px;">
+  <div style="font-size:11px;color:#a78bfa;font-weight:600;">
+    📁 Record ID: <code style="font-family:monospace;color:#c4b5fd;">${f(data.expedienteId)}</code>
+  </div>
+  <div style="font-size:11px;color:#64748b;margin-top:4px;">
+    Date: ${new Date().toLocaleString("en-US", {timeZone:"America/Bogota"})}
+  </div>
+</div>
+
+</td></tr>
+
+<!-- FOOTER -->
+<tr><td style="background:#0d0d1f;padding:20px 36px;text-align:center;border-top:1px solid #2d2d3d;">
+  <p style="font-size:12px;color:#475569;margin:0;line-height:1.6;">
+    This report was automatically generated by <strong style="color:#7c3aed;">MedAuth Pro</strong><br/>
+    Sent to: <a href="mailto:michaelandresfloreshenao@gmail.com" style="color:#7c3aed;text-decoration:none;">michaelandresfloreshenao@gmail.com</a>
+  </p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
 async function _doSubmit() {
   const btn = document.getElementById("btnSubmit");
   btn.disabled = true;
@@ -790,7 +988,7 @@ async function _doSubmit() {
     ss.querySelector("span:last-child").textContent = "Uploading card images...";
     const [urlFront, urlBack] = await Promise.all([
       uploadFile(State.files.front, "frente"),
-      uploadFile(State.files.back, "reverso"),
+      uploadFile(State.files.back,  "reverso"),
     ]);
 
     const data = recopilar();
@@ -806,18 +1004,22 @@ async function _doSubmit() {
     );
     data.expedienteId = docRef.id;
 
-    // Disparar email
-    await firebase.firestore().collection("emailQueue").add({
-      ...data,
-      b64Front: data.b64Front,
-      b64Back:  data.b64Back,
-      expedienteId: data.expedienteId,
-      createdAt: new Date(),
+    // -- Send email via EmailJS (no Cloud Functions needed) --
+    ss.querySelector("span:last-child").textContent = "Sending report by email...";
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email:   "michaelandresfloreshenao@gmail.com",
+      subject:    `[${data.resultado}] ${data.nombre || "Patient"} — Insurance Verification`,
+      patient:    data.nombre || "—",
+      result:     data.resultado,
+      auth:       data.autorizacionFinal || "—",
+      html_report: generateEmailHTML(data),
     });
 
     ss.classList.remove("visible");
     ok.classList.add("visible");
     setTimeout(() => showResultado(data.resultado, data), 1500);
+
   } catch (err) {
     console.error(err);
     ss.classList.remove("visible");
