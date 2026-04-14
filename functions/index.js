@@ -105,6 +105,22 @@ exports.enviarInformeSeguro = functions
         </td>
       </tr>
 
+      <!-- ── DECISIÓN DE AUTORIZACIÓN ── -->
+      <tr>
+        <td style="padding:20px 36px;text-align:center;border-bottom:1px solid #2d2d3d;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:10px;">
+            Decisión de Autorización del Procedimiento
+          </div>
+          <div style="display:inline-block;padding:10px 28px;border-radius:12px;font-size:18px;font-weight:800;
+                      background:${d.autorizacionFinal==='AUTORIZADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};
+                      color:${d.autorizacionFinal==='AUTORIZADO'?verde:rojo};
+                      border:2px solid ${d.autorizacionFinal==='AUTORIZADO'?verde:rojo};">
+            ${d.autorizacionFinal==='AUTORIZADO'?'✅ AUTORIZADO':'❌ NO AUTORIZADO'}
+          </div>
+          ${!d.autorizacionFinal?`<p style="color:#f59e0b;font-size:12px;margin:8px 0 0;">⚠️ Decisión no registrada</p>`:''}
+        </td>
+      </tr>
+
       <tr><td style="padding:28px 36px;">
 
         <!-- ── IMAGEN DE LA TARJETA ── -->

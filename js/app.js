@@ -13,6 +13,7 @@ const State = {
   b64:     { front: null, back: null },        // base64 para el email
   ocr:     {},                                  // datos crudos extraídos
   answers: { q1:null, q2:null, q3:null, q4:null },
+  autorizacionFinal: null,                      // decisión del modal
 };
 
 const STEP_LABELS = [
@@ -748,19 +749,35 @@ function recopilar() {
     notasRep:        v("q6notes"),
     repName:         v("repName"),
     refNum:          v("refNum"),
+    // Decisión de autorización final
+    autorizacionFinal: State.autorizacionFinal || "",
     // Meta
     emailDestino: "michaelandresfloreshenao@gmail.com",
     fecha: new Date(),
   };
 }
 
-// ── SUBMIT ─────────────────────────────────────────────────────
-async function submitForm() {
+// ── MODAL DE AUTORIZACIÓN ──────────────────────────────────────
+function submitForm() {
+  // Mostrar el modal de decisión antes de proceder
+  document.getElementById('authModal').classList.add('visible');
+}
 
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('visible');
+}
 
-  const btn=document.getElementById("btnSubmit");
-  btn.disabled=true; btn.innerHTML="<span class='material-symbols-outlined'>hourglass_empty</span> Procesando...";
-  const [ss,ok,er]=[
+function confirmarAutorizacion(decision) {
+  State.autorizacionFinal = decision; // "AUTORIZADO" o "NO AUTORIZADO"
+  closeAuthModal();
+  _doSubmit();
+}
+
+async function _doSubmit() {
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.innerHTML = "<span class='material-symbols-outlined'>hourglass_empty</span> Procesando...";
+  const [ss, ok, er] = [
     document.getElementById("statusSending"),
     document.getElementById("statusSuccess"),
     document.getElementById("statusError"),
@@ -770,27 +787,26 @@ async function submitForm() {
   er.classList.remove("visible");
 
   try {
-    ss.querySelector("span:last-child").textContent="Subiendo imágenes de la tarjeta...";
+    ss.querySelector("span:last-child").textContent = "Subiendo imágenes de la tarjeta...";
     const [urlFront, urlBack] = await Promise.all([
-      uploadFile(State.files.front,"frente"),
-      uploadFile(State.files.back,"reverso"),
+      uploadFile(State.files.front, "frente"),
+      uploadFile(State.files.back, "reverso"),
     ]);
 
     const data = recopilar();
-    data.urlFrente  = urlFront  || "";
-    data.urlReverso = urlBack   || "";
-    data.b64Front   = State.b64.front || "";   // base64 para el email
+    data.urlFrente  = urlFront || "";
+    data.urlReverso = urlBack  || "";
+    data.b64Front   = State.b64.front || "";
     data.b64Back    = State.b64.back  || "";
     data.resultado  = evaluar(data);
 
-    ss.querySelector("span:last-child").textContent="Guardando expediente...";
+    ss.querySelector("span:last-child").textContent = "Guardando expediente...";
     const docRef = await firebase.firestore().collection("pacientes").add(
-      // no guardar b64 en Firestore (muy pesado), solo en el trigger de email
-      Object.fromEntries(Object.entries(data).filter(([k])=>!k.startsWith("b64")))
+      Object.fromEntries(Object.entries(data).filter(([k]) => !k.startsWith("b64")))
     );
     data.expedienteId = docRef.id;
 
-    // Disparar email con imágenes base64
+    // Disparar email
     await firebase.firestore().collection("emailQueue").add({
       ...data,
       b64Front: data.b64Front,
@@ -801,13 +817,14 @@ async function submitForm() {
 
     ss.classList.remove("visible");
     ok.classList.add("visible");
-    setTimeout(()=>showResultado(data.resultado, data), 1500);
-  } catch(err) {
+    setTimeout(() => showResultado(data.resultado, data), 1500);
+  } catch (err) {
     console.error(err);
     ss.classList.remove("visible");
     er.classList.add("visible");
-    document.getElementById("errorMsg").textContent="Error: "+(err.message||"Intenta de nuevo.");
-    btn.disabled=false; btn.innerHTML="<span class='material-symbols-outlined'>send</span> Evaluar y Enviar Informe";
+    document.getElementById("errorMsg").textContent = "Error: " + (err.message || "Intenta de nuevo.");
+    btn.disabled = false;
+    btn.innerHTML = "<span class='material-symbols-outlined'>send</span> Evaluar y Enviar Informe";
   }
 }
 
