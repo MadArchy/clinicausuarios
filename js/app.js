@@ -692,10 +692,20 @@ function evaluar(data) {
 // â”€â”€ SUBIR ARCHIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function uploadFile(file, side) {
   if (!file) return null;
-  const ref = firebase.storage().ref()
-    .child(`seguros/${Date.now()}_${side}_${file.name.replace(/[^\w.\-]/g,"_")}`);
-  await ref.put(file);
-  return await ref.getDownloadURL();
+  const path = `seguros/${Date.now()}_${side}_${file.name.replace(/[^\w.\-]/g, "_")}`;
+  const storages =
+    typeof getStorageAlternates === "function" ? getStorageAlternates() : [firebase.storage()];
+  let lastErr;
+  for (const st of storages) {
+    try {
+      const ref = st.ref().child(path);
+      await ref.put(file);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 // â”€â”€ RECOPILAR DATOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -773,12 +783,12 @@ function confirmarAutorizacion(decision) {
   _doSubmit();
 }
 
-// -- EMAILJS CONFIG ------------------------------------------
-// Get these 3 values from https://www.emailjs.com/
-const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // Account > API Keys
-const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // Email Services tab
-const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // Email Templates tab
-// ------------------------------------------------------------
+/** Callable estándar (cloudfunctions.net). Requiere en GCP: Cloud Run invoker público para el servicio de la función. */
+async function submitVerificationReportCallable(payload) {
+  await ensureCallableAuth();
+  const callable = functions.httpsCallable("submitVerificationReport");
+  return callable(payload);
+}
 
 // -- GENERATE HTML REPORT ------------------------------------
 function generateEmailHTML(data) {
@@ -985,11 +995,22 @@ async function _doSubmit() {
   er.classList.remove("visible");
 
   try {
+    // Storage (reglas típicas) exige usuario autenticado; sin esto el POST falla y el navegador muestra "CORS".
+    await ensureCallableAuth();
     ss.querySelector("span:last-child").textContent = "Uploading card images...";
-    const [urlFront, urlBack] = await Promise.all([
-      uploadFile(State.files.front, "frente"),
-      uploadFile(State.files.back,  "reverso"),
-    ]);
+    let urlFront = "";
+    let urlBack = "";
+    try {
+      [urlFront, urlBack] = await Promise.all([
+        uploadFile(State.files.front, "frente"),
+        uploadFile(State.files.back,  "reverso"),
+      ]);
+    } catch (uploadErr) {
+      console.warn("Storage upload failed (report email still includes embedded images):", uploadErr);
+      ss.querySelector("span:last-child").textContent =
+        "Storage unavailable — sending report with embedded images...";
+      await new Promise((r) => setTimeout(r, 600));
+    }
 
     const data = recopilar();
     data.urlFrente  = urlFront || "";
@@ -1004,16 +1025,21 @@ async function _doSubmit() {
     );
     data.expedienteId = docRef.id;
 
-    // -- Send email via EmailJS (no Cloud Functions needed) --
-    ss.querySelector("span:last-child").textContent = "Sending report by email...";
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email:   "michaelandresfloreshenao@gmail.com",
-      subject:    `[${data.resultado}] ${data.nombre || "Patient"} — Insurance Verification`,
-      patient:    data.nombre || "—",
-      result:     data.resultado,
-      auth:       data.autorizacionFinal || "—",
+    // -- Send report via Firebase callable function --
+    ss.querySelector("span:last-child").textContent = "Sending report by cloud function...";
+    const subject = `[${data.resultado}] ${data.nombre || "Patient"} — Insurance Verification`;
+    const textBody =
+      `Patient: ${data.nombre || "—"}\n` +
+      `Member ID: ${data.memberId || "—"}\n` +
+      `Group #: ${data.groupNum || "—"}\n` +
+      `Authorization: ${data.autorizacionFinal || "—"}\n` +
+      `Result: ${data.resultado || "—"}`;
+
+    await submitVerificationReportCallable({
+      subject,
+      text: textBody,
       html_report: generateEmailHTML(data),
+      report: data,
     });
 
     ss.classList.remove("visible");

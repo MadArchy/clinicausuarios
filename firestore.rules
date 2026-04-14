@@ -1,15 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Colección de pacientes: escritura pública desde el formulario
+    // Expedientes: solo crear, tras signInAnonymously() en firebase-config.js (ensureCallableAuth).
     match /pacientes/{pacienteId} {
-      allow create: if true;
+      allow create: if request.auth != null;
       allow read, update, delete: if false;
     }
-    // Cola de emails: escritura pública, solo el backend puede leer
+    // Cola legacy (trigger en clinicausuarios/functions): crear desde cliente si aplica; backend con Admin ignora reglas
     match /emailQueue/{docId} {
       allow create: if true;
       allow read, update, delete: if false;
+    }
+    // Informes enviados por submitVerificationReport (firebase-functions/sendEmail.ts).
+    // El cliente NO escribe aquí; solo el Admin SDK en Cloud Functions (sin pasar por estas reglas).
+    match /verificationReports/{reportId} {
+      allow read, write: if false;
     }
   }
 }
