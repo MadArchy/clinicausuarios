@@ -387,7 +387,7 @@
         <div class="logo-sub">Bariatric Surgery Insurance Verification</div>
       </div>
     </div>
-    <div class="header-badge">Sistema Activo</div>
+    <div class="header-badge">System Active</div>
   </header>
 
   <main class="main-container">
@@ -395,8 +395,8 @@
     <!-- PROGRESS -->
     <div class="progress-wrapper" id="progressWrapper">
       <div class="progress-info">
-        <span class="progress-label" id="progressLabel">Paso 1 de 3</span>
-        <span class="progress-count" id="progressCount">Datos del Paciente y Tarjeta del Seguro</span>
+        <span class="progress-label" id="progressLabel">Step 1 of 3</span>
+        <span class="progress-count" id="progressCount">Patient Data &amp; Insurance Card</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" id="progressFill" style="width:33%"></div>
@@ -404,15 +404,15 @@
       <div class="steps-dots">
         <div class="step-dot active" id="dot-1">
           <div class="step-dot-circle">1</div>
-          <span class="step-dot-label">Paciente &amp; Tarjeta</span>
+          <span class="step-dot-label">Patient &amp; Card</span>
         </div>
         <div class="step-dot" id="dot-2">
           <div class="step-dot-circle"><span class="material-symbols-outlined">call</span></div>
-          <span class="step-dot-label">Script de Llamada</span>
+          <span class="step-dot-label">Call Script</span>
         </div>
         <div class="step-dot" id="dot-3">
           <div class="step-dot-circle">3</div>
-          <span class="step-dot-label">Resultado</span>
+          <span class="step-dot-label">Result</span>
         </div>
       </div>
     </div>
@@ -425,13 +425,13 @@
 
 
 
-        <!-- Tarjeta del seguro -->
+        <!-- Insurance Card -->
         <div class="section-header" style="margin-bottom:6px;">
           <div class="section-icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);"><span class="material-symbols-outlined">credit_card</span></div>
           <div>
-            <div class="section-title" style="font-size:18px;">Tarjeta del Seguro</div>
+            <div class="section-title" style="font-size:18px;">Insurance Card</div>
             <p class="section-subtitle">
-              Sube el <strong>frente</strong> (Member ID, Group) y el <strong>reverso</strong> (teléfonos de Member Services)
+              Upload the <strong>front</strong> (Member ID, Group) and the <strong>back</strong> (Member Services phone numbers)
             </p>
           </div>
         </div>
@@ -440,65 +440,65 @@
         <!-- DOS ZONAS DE CARGA -->
         <div class="card-sides">
 
-          <!-- FRENTE -->
+          <!-- FRONT -->
           <div>
-            <div class="card-side-label front-label"><span class="material-symbols-outlined">badge</span> Frente de la Tarjeta</div>
+            <div class="card-side-label front-label"><span class="material-symbols-outlined">badge</span> Front of Card</div>
             <div class="card-drop front-drop" id="dropFront" style="display:flex;">
-              <!-- Input galería (desktop + móvil) -->
+              <!-- Gallery input (desktop + mobile) -->
               <input type="file" id="fileFront" accept="image/*" onchange="handleCard('front', event)" />
-              <!-- Input cámara (solo móvil, cámara trasera) -->
+              <!-- Camera input (mobile only, rear camera) -->
               <input type="file" id="fileFrontCam" accept="image/*" capture="environment" onchange="handleCard('front', event)" class="cam-input-hidden" />
               <span class="card-drop-icon"><span class="material-symbols-outlined">image</span></span>
-              <span class="card-drop-title">Foto del frente</span>
+              <span class="card-drop-title">Front photo</span>
               <span class="card-drop-sub">Member ID · Group # · Plan · Copays</span>
-              <span class="card-drop-badge front-badge"><span class="material-symbols-outlined">document_scanner</span> OCR completo</span>
-              <!-- Botón cámara visible sólo en móvil -->
+              <span class="card-drop-badge front-badge"><span class="material-symbols-outlined">document_scanner</span> Full OCR</span>
+              <!-- Camera button — mobile only -->
               <button type="button" class="cam-btn mobile-only" onclick="event.stopPropagation(); document.getElementById('fileFrontCam').click();">
-                <span class="material-symbols-outlined">photo_camera</span> Tomar foto
+                <span class="material-symbols-outlined">photo_camera</span> Take photo
               </button>
             </div>
             <div class="captured-card" id="capFront">
-              <img id="imgFront" src="" alt="Frente de la tarjeta" />
+              <img id="imgFront" src="" alt="Front of card" />
               <div class="captured-card-actions">
-                <button class="cap-btn danger" onclick="removeCard('front')"><span class="material-symbols-outlined">close</span> Quitar</button>
+                <button class="cap-btn danger" onclick="removeCard('front')"><span class="material-symbols-outlined">close</span> Remove</button>
               </div>
             </div>
             <div class="ocr-side-panel" id="ocrFrontPanel">
               <div class="ocr-side-header">
                 <div class="ocr-spinner"></div>
-                <span class="ocr-side-label" id="ocrFrontLabel">Leyendo frente...</span>
+                <span class="ocr-side-label" id="ocrFrontLabel">Reading front...</span>
               </div>
               <div class="ocr-side-bar"><div class="ocr-side-fill" id="ocrFrontFill"></div></div>
             </div>
           </div>
 
-          <!-- REVERSO -->
+          <!-- BACK -->
           <div>
-            <div class="card-side-label back-label"><span class="material-symbols-outlined">sync</span> Reverso de la Tarjeta</div>
+            <div class="card-side-label back-label"><span class="material-symbols-outlined">sync</span> Back of Card</div>
             <div class="card-drop back-drop" id="dropBack" style="display:flex;">
-              <!-- Input galería (desktop + móvil) -->
+              <!-- Gallery input (desktop + mobile) -->
               <input type="file" id="fileBack" accept="image/*" onchange="handleCard('back', event)" />
-              <!-- Input cámara (solo móvil, cámara trasera) -->
+              <!-- Camera input (mobile only, rear camera) -->
               <input type="file" id="fileBackCam" accept="image/*" capture="environment" onchange="handleCard('back', event)" class="cam-input-hidden" />
               <span class="card-drop-icon"><span class="material-symbols-outlined">fact_check</span></span>
-              <span class="card-drop-title">Foto del reverso</span>
-              <span class="card-drop-sub">Tel. Member Services · Authorization · Website</span>
-              <span class="card-drop-badge back-badge"><span class="material-symbols-outlined">call</span> Extrae teléfonos</span>
-              <!-- Botón cámara visible sólo en móvil -->
+              <span class="card-drop-title">Back photo</span>
+              <span class="card-drop-sub">Member Services Phone · Authorization · Website</span>
+              <span class="card-drop-badge back-badge"><span class="material-symbols-outlined">call</span> Extract phones</span>
+              <!-- Camera button — mobile only -->
               <button type="button" class="cam-btn mobile-only" onclick="event.stopPropagation(); document.getElementById('fileBackCam').click();">
-                <span class="material-symbols-outlined">photo_camera</span> Tomar foto
+                <span class="material-symbols-outlined">photo_camera</span> Take photo
               </button>
             </div>
             <div class="captured-card" id="capBack">
-              <img id="imgBack" src="" alt="Reverso de la tarjeta" />
+              <img id="imgBack" src="" alt="Back of card" />
               <div class="captured-card-actions">
-                <button class="cap-btn danger" onclick="removeCard('back')"><span class="material-symbols-outlined">close</span> Quitar</button>
+                <button class="cap-btn danger" onclick="removeCard('back')"><span class="material-symbols-outlined">close</span> Remove</button>
               </div>
             </div>
             <div class="ocr-side-panel" id="ocrBackPanel">
               <div class="ocr-side-header">
                 <div class="ocr-spinner"></div>
-                <span class="ocr-side-label" id="ocrBackLabel">Leyendo reverso...</span>
+                <span class="ocr-side-label" id="ocrBackLabel">Reading back...</span>
               </div>
               <div class="ocr-side-bar"><div class="ocr-side-fill" id="ocrBackFill"></div></div>
             </div>
@@ -510,8 +510,8 @@
         ══════════════════════════════════════════════════ -->
         <div id="ocrToggleSection" style="display:none; margin-top:24px;">
           <button id="ocrToggleBtn" type="button" class="btn" style="width:100%; border:1px solid var(--border); background:rgba(0,0,0,0.02); display:flex; justify-content:space-between; align-items:center; color:var(--text-primary);" onclick="toggleOCRData()">
-            <span style="font-weight:600;"><span class="material-symbols-outlined">check_circle</span> Tarjeta procesada exitosamente</span>
-            <span id="ocrToggleIcon" style="font-size:12px;background:rgba(0,0,0,0.05);padding:6px 12px;border-radius:20px;">Ver datos extraídos <span class="material-symbols-outlined">expand_more</span></span>
+            <span style="font-weight:600;"><span class="material-symbols-outlined">check_circle</span> Card scanned successfully</span>
+            <span id="ocrToggleIcon" style="font-size:12px;background:rgba(0,0,0,0.05);padding:6px 12px;border-radius:20px;">View extracted data <span class="material-symbols-outlined">expand_more</span></span>
           </button>
         </div>
 
@@ -534,35 +534,35 @@
           </div>
 
           <!-- 1. IDENTIFICACIÓN -->
-          <div class="ocr-section-label" style="color:var(--primary-light);"><span class="material-symbols-outlined">badge</span> Identificación del Seguro</div>
+          <div class="ocr-section-label" style="color:var(--primary-light);"><span class="material-symbols-outlined">badge</span> Insurance Identification</div>
           <div class="extracted-fields">
             <div class="extracted-field field-span-2">
-              <label>Nombre de la Aseguradora</label>
+              <label>Insurance Company Name</label>
               <input type="text" id="f_aseguradora" placeholder="Ambetter · Blue Cross BlueShield · Amerigroup · Molina · Christus..." />
             </div>
             <div class="extracted-field">
-              <label>Subscriber Name (titular de la póliza)</label>
-              <input type="text" id="f_subscriberName" placeholder="Nombre del suscriptor" />
+              <label>Subscriber Name (policyholder)</label>
+              <input type="text" id="f_subscriberName" placeholder="Subscriber full name" />
             </div>
             <div class="extracted-field">
-              <label>Member Name (nombre del miembro)</label>
-              <input type="text" id="f_memberName" placeholder="Nombre del paciente en la tarjeta" />
+              <label>Member Name</label>
+              <input type="text" id="f_memberName" placeholder="Patient name on card" />
             </div>
             <div class="extracted-field">
               <label>Member ID / ID # ★</label>
-              <input type="text" id="f_memberId" placeholder="Número de miembro (más importante)" />
+              <input type="text" id="f_memberId" placeholder="Member number (most important)" />
             </div>
             <div class="extracted-field">
               <label>Subscriber ID / Subscriber #</label>
-              <input type="text" id="f_subscriberId" placeholder="Número de suscriptor" />
+              <input type="text" id="f_subscriberId" placeholder="Subscriber number" />
             </div>
             <div class="extracted-field">
               <label>Group Number / Group No. ★</label>
-              <input type="text" id="f_groupNum" placeholder="Número de grupo" />
+              <input type="text" id="f_groupNum" placeholder="Group number" />
             </div>
             <div class="extracted-field field-span-2">
-              <label>Plan Name — nombre completo del plan</label>
-              <input type="text" id="f_planName" placeholder="Ej. Ambetter Balanced Care 1 + Vision + Adult Dental" />
+              <label>Plan Name — full plan name</label>
+              <input type="text" id="f_planName" placeholder="E.g. Ambetter Balanced Care 1 + Vision + Adult Dental" />
             </div>
             <div class="extracted-field">
               <label>Plan Type</label>
@@ -570,15 +570,15 @@
             </div>
             <div class="extracted-field">
               <label>Benefit Plan Code</label>
-              <input type="text" id="f_benefitPlan" placeholder="Ej. HIOPT" />
+              <input type="text" id="f_benefitPlan" placeholder="E.g. HIOPT" />
             </div>
             <div class="extracted-field">
-              <label>Effective Date (fecha de vigencia)</label>
+              <label>Effective Date</label>
               <input type="text" id="f_effectiveDate" placeholder="MM/DD/YYYY" />
             </div>
             <div class="extracted-field">
               <label>Date of Birth / DOB</label>
-              <input type="text" id="f_dob" placeholder="Fecha de nacimiento del titular" />
+              <input type="text" id="f_dob" placeholder="Policyholder date of birth" />
             </div>
             <div class="extracted-field">
               <label>Network</label>
@@ -589,8 +589,8 @@
               <input type="text" id="f_coverage" placeholder="CHIP / Individual / Family / TX-EX..." />
             </div>
             <div class="extracted-field field-span-2">
-              <label>Dependents (miembros adicionales en la póliza)</label>
-              <input type="text" id="f_dependents" placeholder="Ej. Dependent One · Dependent Two · Member 1, Member 2, Member 3..." />
+              <label>Dependents (additional members on the policy)</label>
+              <input type="text" id="f_dependents" placeholder="E.g. Dependent One · Dependent Two · Member 1, Member 2..." />
             </div>
           </div>
 
@@ -671,85 +671,85 @@
           <div class="extracted-fields">
             <div class="extracted-field">
               <label>PCP Name</label>
-              <input type="text" id="f_pcpName" placeholder="Nombre del médico de cabecera" />
+              <input type="text" id="f_pcpName" placeholder="Primary care physician name" />
             </div>
             <div class="extracted-field">
               <label>PCP Phone</label>
-              <input type="text" id="f_pcpPhone" placeholder="Teléfono del PCP" />
+              <input type="text" id="f_pcpPhone" placeholder="PCP phone number" />
             </div>
             <div class="extracted-field">
               <label>PCP Effective Date</label>
-              <input type="text" id="f_pcpEffDate" placeholder="Fecha de inicio con el PCP" />
+              <input type="text" id="f_pcpEffDate" placeholder="Start date with PCP" />
             </div>
             <div class="extracted-field">
               <label>Provider Group</label>
-              <input type="text" id="f_providerGroup" placeholder="Provider Group del médico" />
+              <input type="text" id="f_providerGroup" placeholder="Physician provider group" />
             </div>
             <div class="extracted-field">
               <label>Provider Phone</label>
-              <input type="text" id="f_providerPhone" placeholder="Tel. del proveedor" />
+              <input type="text" id="f_providerPhone" placeholder="Provider phone number" />
             </div>
             <div class="extracted-field">
               <label>CHIP Perinate Number</label>
-              <input type="text" id="f_chipNum" placeholder="Solo tarjetas Amerigroup/CHIP" />
+              <input type="text" id="f_chipNum" placeholder="Amerigroup/CHIP cards only" />
             </div>
           </div>
 
           <hr class="form-divider" style="margin:14px 0;" />
 
           <!-- 5. TELÉFONOS DEL REVERSO -->
-          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Teléfonos del Reverso de la Tarjeta</div>
+          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Back of Card Phone Numbers</div>
           <div class="extracted-fields">
             <div class="extracted-field field-span-2" style="background:rgba(0, 168, 150,0.04);border:1px solid rgba(0, 168, 150,0.25);border-radius:10px;padding:12px;">
-              <label style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Member Services ★ — número principal para llamar</label>
-              <input type="tel" id="f_phone" placeholder="Número de Member Services del reverso" />
-              <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:5px;">Este número aparecerá en el Script de Llamada del Paso 2</small>
+              <label style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Member Services ★ — main number to call</label>
+              <input type="tel" id="f_phone" placeholder="Member Services number from card back" />
+              <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:5px;">This number will appear in the Call Script on Step 2</small>
             </div>
             <div class="extracted-field">
-              <label>Tel. Prior Authorization / Pre-Auth</label>
-              <input type="text" id="f_phoneAuth" placeholder="Número para autorizaciones previas" />
+              <label>Prior Authorization / Pre-Auth Phone</label>
+              <input type="text" id="f_phoneAuth" placeholder="Prior authorization phone number" />
             </div>
             <div class="extracted-field">
-              <label>Tel. Pharmacy / Farmacia</label>
-              <input type="text" id="f_phonePharmacy" placeholder="Número de farmacia" />
+              <label>Pharmacy Phone</label>
+              <input type="text" id="f_phonePharmacy" placeholder="Pharmacy phone number" />
             </div>
             <div class="extracted-field">
               <label>24-Hour Nurse HelpLine</label>
-              <input type="text" id="f_phoneNurse" placeholder="Línea de enfermera 24h" />
+              <input type="text" id="f_phoneNurse" placeholder="24h nurse line" />
             </div>
             <div class="extracted-field">
               <label>Behavioral Health Phone</label>
-              <input type="text" id="f_phoneBehavioral" placeholder="Salud mental / behavioral health" />
+              <input type="text" id="f_phoneBehavioral" placeholder="Mental health / behavioral health" />
             </div>
             <div class="extracted-field field-span-2">
-              <label>Sitio Web del Seguro</label>
-              <input type="text" id="f_websiteBack" placeholder="www.aseguradora.com" />
+              <label>Insurance Website</label>
+              <input type="text" id="f_websiteBack" placeholder="www.insurancecompany.com" />
             </div>
           </div>
 
           <hr class="form-divider" style="margin:14px 0;" />
 
           <!-- 6. CAMPO LIBRE -->
-          <div class="ocr-section-label" style="color:#f59e0b;"><span class="material-symbols-outlined">edit_note</span> Datos Adicionales de la Tarjeta</div>
+          <div class="ocr-section-label" style="color:#f59e0b;"><span class="material-symbols-outlined">edit_note</span> Additional Card Information</div>
           <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;padding:14px;">
             <label style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:8px;">
-              Escribe aquí cualquier información visible en la tarjeta que no haya sido capturada automáticamente
+              Enter any information visible on the card that was not captured automatically
             </label>
             <textarea id="f_extraInfo" rows="4"
               style="width:100%;background:rgba(0,0,0,0.03);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text-primary);font-family:'Inter',sans-serif;outline:none;resize:vertical;box-sizing:border-box;"
-              placeholder="Ej: Out-of-pocket máximo $8,000 · Deducible familiar $4,000 · TDI Texas · QHF/HMO · Nurse HelpLine 1-800-xxx-xxxx..."></textarea>
+              placeholder="E.g. Out-of-pocket max $8,000 · Family deductible $4,000 · TDI Texas · QHF/HMO · Nurse HelpLine 1-800-xxx-xxxx..."></textarea>
           </div>
         </div>
 
         <!-- Error banner inline -->
         <div id="formErrorBanner" style="display:none;align-items:center;gap:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:10px;padding:12px 18px;color:#fca5a5;font-size:14px;margin-bottom:14px;">
-          <span class="material-symbols-outlined">warning</span> Completa los campos requeridos
+          <span class="material-symbols-outlined">warning</span> Please complete all required fields
         </div>
 
         <div class="nav-buttons">
           <span></span>
           <button class="btn btn-primary" onclick="goToScript()">
-            Continuar al Script de Llamada <span class="material-symbols-outlined">call</span>
+            Continue to Call Script <span class="material-symbols-outlined">call</span>
           </button>
         </div>
       </div>
@@ -773,12 +773,12 @@
             <div class="call-phone-chip" id="phoneChip"><span class="material-symbols-outlined">call</span> —</div>
           </div>
           <div id="noPhoneNote" style="margin-top:12px;font-size:12px;color:var(--text-muted);">
-            <span class="material-symbols-outlined">info</span> El número de teléfono aparecerá aquí cuando subas el reverso de la tarjeta
+            <span class="material-symbols-outlined">info</span> The phone number will appear here once you upload the back of the card
           </div>
           <!-- Resumen del paciente -->
           <div class="patient-chips-grid">
             <div class="patient-chip">
-              <div class="patient-chip-label">Paciente</div>
+              <div class="patient-chip-label">Patient</div>
               <div class="patient-chip-val" id="scriptName">—</div>
             </div>
             <div class="patient-chip patient-chip-blue">
@@ -805,7 +805,7 @@
               my Member ID is <strong id="scriptMidInline">—</strong>
               and my Group Number is <strong id="scriptGrpInline">—</strong>."
             </p>
-            <small><span class="material-symbols-outlined">record_voice_over</span> Habla claro, despacio — el representante tomará nota</small>
+            <small><span class="material-symbols-outlined">record_voice_over</span> Speak clearly and slowly — the representative will take notes</small>
           </div>
         </div>
 
@@ -815,7 +815,7 @@
           <div class="cpt-block">
             <div class="cpt-item">
               <span class="cpt-code">43775</span>
-              <span class="cpt-name">Sleeve Gastrectomy (manga gástrica)</span>
+              <span class="cpt-name">Sleeve Gastrectomy</span>
             </div>
             <div class="cpt-item">
               <span class="cpt-code">43644</span>
@@ -823,7 +823,7 @@
             </div>
             <div class="cpt-item">
               <span class="cpt-code">43770</span>
-              <span class="cpt-name">Gastric Band (banda gástrica)</span>
+              <span class="cpt-name">Gastric Band (Lap-Band)</span>
             </div>
             <div class="cpt-item">
               <span class="cpt-code">E66.01</span>
@@ -842,7 +842,7 @@
               <div class="q-num">1</div>
               <div class="q-content">
                 <div class="q-en">"Is <strong>bariatric surgery</strong> covered under my plan?"</div>
-                <div class="q-es">¿La cirugía bariátrica está cubierta bajo mi plan?</div>
+                <div class="q-es">Is bariatric surgery covered under my plan?</div>
               </div>
             </div>
 
@@ -851,7 +851,7 @@
               <div class="q-num">2</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>prior authorization</strong>? If so, has it been obtained?"</div>
-                <div class="q-es">¿Necesito autorización previa? ¿Ya fue obtenida?</div>
+                <div class="q-es">Do I need a prior authorization? Has it been obtained?</div>
               </div>
             </div>
 
@@ -860,7 +860,7 @@
               <div class="q-num">3</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>referral from my PCP</strong>?"</div>
-                <div class="q-es">¿Necesito referido de mi médico de cabecera?</div>
+                <div class="q-es">Do I need a referral from my primary care physician?</div>
               </div>
             </div>
 
@@ -869,7 +869,7 @@
               <div class="q-num">4</div>
               <div class="q-content">
                 <div class="q-en">"Does the surgery have to be done at a <strong>specific hospital or facility</strong>?"</div>
-                <div class="q-es">¿La cirugía debe hacerse en un hospital específico?</div>
+                <div class="q-es">Does the surgery have to be performed at a specific hospital?</div>
               </div>
             </div>
 
@@ -878,7 +878,7 @@
               <div class="q-num">5</div>
               <div class="q-content">
                 <div class="q-en">"What is my <strong>deductible</strong> and how much have I met?"</div>
-                <div class="q-es">¿Cuál es mi deducible y cuánto he cumplido?</div>
+                <div class="q-es">What is my deductible and how much have I met so far?</div>
               </div>
             </div>
 
@@ -887,7 +887,7 @@
               <div class="q-num">6</div>
               <div class="q-content">
                 <div class="q-en">"Is there <strong>anything else</strong> I need to do to get this approved?"</div>
-                <div class="q-es">¿Hay algo más que deba hacer para que sea aprobado?</div>
+                <div class="q-es">Is there anything else required to get this approved?</div>
               </div>
             </div>
 
@@ -902,8 +902,8 @@
           <div class="hangup-alert">
             <div class="hangup-alert-icon"><span class="material-symbols-outlined">notifications_active</span></div>
             <div class="hangup-alert-body">
-              <div class="hangup-alert-title">¡NO CUELGUES AÚN — ANOTA ESTO AHORA!</div>
-              <div class="hangup-alert-sub">Esta información es <strong>evidencia legal</strong> de la verificación. Sin ella, el proceso puede ser inválido.</div>
+              <div class="hangup-alert-title">DON'T HANG UP YET — WRITE THIS DOWN NOW!</div>
+              <div class="hangup-alert-sub">This information is <strong>legal evidence</strong> of the verification. Without it, the process may be invalid.</div>
             </div>
           </div>
 
@@ -913,21 +913,21 @@
               <div class="hangup-check-num">1</div>
               <div class="hangup-check-text">
                 <strong>Rep's full name</strong>
-                <span>Nombre completo del representante que atendió</span>
+                <span>Full name of the representative who assisted you</span>
               </div>
             </div>
             <div class="hangup-check-item">
               <div class="hangup-check-num">2</div>
               <div class="hangup-check-text">
                 <strong>Reference / Confirmation #</strong>
-                <span>Número de referencia o confirmación de la llamada</span>
+                <span>Reference or confirmation number for the call</span>
               </div>
             </div>
             <div class="hangup-check-item">
               <div class="hangup-check-num">3</div>
               <div class="hangup-check-text">
                 <strong>Everything they told you</strong>
-                <span>Todo lo que indicaron sobre cobertura, autorizaciones y deducibles</span>
+                <span>All details about coverage, authorizations, and deductibles</span>
               </div>
             </div>
           </div>
@@ -936,17 +936,17 @@
           <div class="hangup-inputs">
             <div class="hangup-input-group">
               <label class="hangup-input-label">
-                <span class="material-symbols-outlined">badge</span> Nombre del Representante <span class="hangup-required">REQUERIDO</span>
+                <span class="material-symbols-outlined">badge</span> Representative Name <span class="hangup-required">REQUIRED</span>
               </label>
               <input class="q-input-field hangup-field" type="text" id="repName"
-                placeholder="Ej. María González — agente de Member Services" style="max-width:100%;margin-top:0;" />
+                placeholder="E.g. Maria Gonzalez — Member Services agent" style="max-width:100%;margin-top:0;" />
             </div>
             <div class="hangup-input-group">
               <label class="hangup-input-label">
-                <span class="material-symbols-outlined">tag</span> Número de Referencia de la Llamada <span class="hangup-required">REQUERIDO</span>
+                <span class="material-symbols-outlined">tag</span> Call Reference Number <span class="hangup-required">REQUIRED</span>
               </label>
               <input class="q-input-field hangup-field" type="text" id="refNum"
-                placeholder="Ej. REF-2024-8847291" style="max-width:100%;margin-top:0;" />
+                placeholder="E.g. REF-2024-8847291" style="max-width:100%;margin-top:0;" />
             </div>
           </div>
         </div>
@@ -954,19 +954,19 @@
         <!-- STATUS / SEND -->
         <div id="statusSending" style="display:none;text-align:center;padding:18px;background:rgba(0, 119, 206,0.08);border:1px solid rgba(0, 119, 206,0.2);border-radius:12px;margin-bottom:14px;">
           <div class="ocr-spinner" style="margin:0 auto 10px;"></div>
-          <span style="font-size:14px;color:var(--primary-light);">Procesando...</span>
+          <span style="font-size:14px;color:var(--primary-light);">Processing...</span>
         </div>
         <div id="statusSuccess" style="display:none;text-align:center;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:14px;">
-          <p style="font-size:14px;color:var(--apto);margin:0;"><span class="material-symbols-outlined">check_circle</span> ¡Informe enviado! Calculando resultado...</p>
+          <p style="font-size:14px;color:var(--apto);margin:0;"><span class="material-symbols-outlined">check_circle</span> Report submitted! Calculating result...</p>
         </div>
         <div id="statusError" style="display:none;padding:16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;margin-bottom:14px;">
-          <p style="font-size:13px;color:var(--no-apto);margin:0;" id="errorMsg">Error enviando el correo.</p>
+          <p style="font-size:13px;color:var(--no-apto);margin:0;" id="errorMsg">Error sending email.</p>
         </div>
 
         <div class="nav-buttons">
-          <button class="btn btn-secondary" onclick="prevStep(2)">← Atrás</button>
+          <button class="btn btn-secondary" onclick="prevStep(2)">← Back</button>
           <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">
-            <span class="material-symbols-outlined">send</span> Evaluar y Enviar Informe
+            <span class="material-symbols-outlined">send</span> Evaluate &amp; Send Report
           </button>
         </div>
       </div>
@@ -1022,29 +1022,29 @@
     </div>
 
     <!-- Title -->
-    <h2 class="auth-modal-title">¿Fue autorizado el procedimiento?
+    <h2 class="auth-modal-title">Was the procedure authorized?
     </h2>
     <p class="auth-modal-sub">
-      Esta respuesta es <strong>obligatoria</strong>. Se incluirá en el informe y<br/>en el correo enviado a<br/>
+      This answer is <strong>required</strong>. It will be included in the report and<br/>in the email sent to<br/>
       <strong>michaelandresfloreshenao@gmail.com</strong>
     </p>
 
     <!-- Choice buttons -->
     <div class="auth-modal-choices">
-      <button class="auth-btn auth-btn-yes" onclick="confirmarAutorizacion('AUTORIZADO')">
+      <button class="auth-btn auth-btn-yes" onclick="confirmarAutorizacion('AUTHORIZED')">
         <span class="material-symbols-outlined">check_circle</span>
-        <span class="auth-btn-label">Sí, Autorizado</span>
-        <span class="auth-btn-sub">La aseguradora aprobó el procedimiento</span>
+        <span class="auth-btn-label">Yes, Authorized</span>
+        <span class="auth-btn-sub">The insurance company approved the procedure</span>
       </button>
-      <button class="auth-btn auth-btn-no" onclick="confirmarAutorizacion('NO AUTORIZADO')">
+      <button class="auth-btn auth-btn-no" onclick="confirmarAutorizacion('NOT AUTHORIZED')">
         <span class="material-symbols-outlined">cancel</span>
-        <span class="auth-btn-label">No Autorizado</span>
-        <span class="auth-btn-sub">La aseguradora negó o pendió la solicitud</span>
+        <span class="auth-btn-label">Not Authorized</span>
+        <span class="auth-btn-sub">The insurance company denied or pended the request</span>
       </button>
     </div>
 
     <button class="auth-modal-cancel" onclick="closeAuthModal()">
-      <span class="material-symbols-outlined">close</span> Cancelar y revisar
+      <span class="material-symbols-outlined">close</span> Cancel and review
     </button>
   </div>
 </div>
@@ -1187,6 +1187,6 @@
   .auth-modal-cancel:hover { color: #64748b; }
 </style>
 
-<script src="js/app.js?v=9"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

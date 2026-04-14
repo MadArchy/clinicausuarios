@@ -1,19 +1,19 @@
-/* ============================================================
-   APP.JS — OCR multi-formato para tarjetas de seguro médico
+﻿/* ============================================================
+   APP.JS â€” OCR multi-formato para tarjetas de seguro mÃ©dico
    Soporta: Ambetter, Amerigroup, BlueCross, Christus, Molina
-   y cualquier otro asegurador común de Texas/USA
+   y cualquier otro asegurador comÃºn de Texas/USA
    ============================================================ */
 "use strict";
 
-// ── ESTADO GLOBAL ──────────────────────────────────────────────
+// â”€â”€ ESTADO GLOBAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const State = {
   step: 1,
   files:   { front: null, back: null },
   urls:    { front: null, back: null },
   b64:     { front: null, back: null },        // base64 para el email
-  ocr:     {},                                  // datos crudos extraídos
+  ocr:     {},                                  // datos crudos extraÃ­dos
   answers: { q1:null, q2:null, q3:null, q4:null },
-  autorizacionFinal: null,                      // decisión del modal
+  autorizacionFinal: null,                      // modal decision
 };
 
 const STEP_LABELS = [
@@ -22,7 +22,7 @@ const STEP_LABELS = [
   { label:"Resultado Final",                         pct:100 },
 ];
 
-// ── NAVEGACIÓN ─────────────────────────────────────────────────
+// â”€â”€ NAVEGACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateProgress(step) {
   const c = STEP_LABELS[step-1];
   document.getElementById("progressFill").style.width  = c.pct+"%";
@@ -41,9 +41,9 @@ function goToScript() {
   const banner = document.getElementById('formErrorBanner');
   if (banner) banner.style.display = 'none';
 
-  const nm  = v('f_subscriberName') || v('f_memberName') || '—';
-  const mid = v('f_memberId') || v('f_subscriberId') || '—';
-  const grp = v('f_groupNum') || '—';
+  const nm  = v('f_subscriberName') || v('f_memberName') || 'â€”';
+  const mid = v('f_memberId') || v('f_subscriberId') || 'â€”';
+  const grp = v('f_groupNum') || 'â€”';
   
   if (document.getElementById('scriptName')) document.getElementById('scriptName').textContent = nm;
   if (document.getElementById('scriptMid')) document.getElementById('scriptMid').textContent = mid;
@@ -71,11 +71,11 @@ function showStep(to) {
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
-// ── MANEJO DE ARCHIVOS ─────────────────────────────────────────
+// â”€â”€ MANEJO DE ARCHIVOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleCard(side, event) {
   const file = event.target.files[0];
   if (!file || !file.type.startsWith("image/")) {
-    alert("⚠️ Solo se permiten imágenes (JPG, PNG, WEBP, HEIC).");
+    alert("âš ï¸ Solo se permiten imÃ¡genes (JPG, PNG, WEBP, HEIC).");
     return;
   }
   State.files[side] = file;
@@ -91,7 +91,7 @@ function handleCard(side, event) {
     cap_el.classList.add("visible");
     document.getElementById(`img${cap(side)}`).src = dataUrl;
 
-    // Mostrar botón de toggle
+    // Mostrar botÃ³n de toggle
     document.getElementById("ocrToggleSection").style.display = "block";
 
     // OCR
@@ -135,7 +135,7 @@ const FRONT_IDS = [
 ];
 const BACK_IDS = ["f_phone","f_phoneAuth","f_phonePharmacy","f_phoneNurse","f_phoneBehavioral","f_websiteBack"];
 
-// ── OCR ────────────────────────────────────────────────────────
+// â”€â”€ OCR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function runOCR(side, dataUrl) {
   const panel = document.getElementById(`ocr${cap(side)}Panel`);
   const fill  = document.getElementById(`ocr${cap(side)}Fill`);
@@ -155,43 +155,43 @@ async function runOCR(side, dataUrl) {
     const { data: { text } } = await worker.recognize(dataUrl);
     await worker.terminate();
     fill.style.width  = "100%";
-    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Información extraída correctamente";
+    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> InformaciÃ³n extraÃ­da correctamente";
     // Mostrar texto crudo
     const rawBlock = document.getElementById("ocrRawBlock");
     const rawArea  = document.getElementById("ocrRawText");
     if (rawBlock && rawArea) {
       rawBlock.style.display = "block";
-      rawArea.value = (rawArea.value ? rawArea.value + "\n\n── REVERSO ──\n" : "") + text.trim();
+      rawArea.value = (rawArea.value ? rawArea.value + "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
       if (side==="front") rawArea.value = text.trim();
-      else rawArea.value = rawArea.value + (rawArea.value ? "\n\n── REVERSO ──\n" : "") + text.trim();
+      else rawArea.value = rawArea.value + (rawArea.value ? "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
     }
     if (side==="front") parseFront(text);
     else                parseBack(text);
   } catch(err) {
-    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Error de lectura — completa los datos manualmente";
+    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Error de lectura â€” completa los datos manualmente";
     console.error("OCR error:", err);
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PARSER FRENTE — robusto, multi-formato, tolerante a ruido OCR
-//  Soporta: Ambetter · Amerigroup · BlueCross/TX · Christus · Molina
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PARSER FRENTE â€” robusto, multi-formato, tolerante a ruido OCR
+//  Soporta: Ambetter Â· Amerigroup Â· BlueCross/TX Â· Christus Â· Molina
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function parseFront(text) {
 
-  // ── 1. PREPROCESADO ──────────────────────────────────────────
-  // a) Líneas limpias (quitamos ruido OCR: ><=|~`@#^*)
+  // â”€â”€ 1. PREPROCESADO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // a) LÃ­neas limpias (quitamos ruido OCR: ><=|~`@#^*)
   const lines = text.split(/\r?\n/)
     .map(l => l.replace(/[><|~`@#\^*\\]/g, ' ').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
 
-  // b) Texto colapsado en una sola línea (útil para patrones multi-línea)
+  // b) Texto colapsado en una sola lÃ­nea (Ãºtil para patrones multi-lÃ­nea)
   const collapsed = lines.join(' ');
 
-  // c) Versión uppercase para comparaciones rápidas
+  // c) VersiÃ³n uppercase para comparaciones rÃ¡pidas
   const T = collapsed.toUpperCase();
 
-  // ── 2. HELPERS ───────────────────────────────────────────────
+  // â”€â”€ 2. HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // Prueba patrones en collapsed y raw; devuelve primer match
   const tryPat = (patterns) => {
@@ -202,7 +202,7 @@ function parseFront(text) {
     return '';
   };
 
-  // Busca valor JUSTO después de una etiqueta (misma línea o siguiente línea)
+  // Busca valor JUSTO despuÃ©s de una etiqueta (misma lÃ­nea o siguiente lÃ­nea)
   const afterLabel = (keywords) => {
     const kwArr = Array.isArray(keywords) ? keywords : [keywords];
     for (const kw of kwArr) {
@@ -211,22 +211,22 @@ function parseFront(text) {
       const idx = T.indexOf(ku);
       if (idx !== -1) {
         const after = collapsed.slice(idx + kw.length).replace(/^\s*[:\-=]?\s*/, '').trim();
-        const tok = after.split(/\s{2,}|\n/)[0].trim(); // hasta doble espacio o línea nueva
+        const tok = after.split(/\s{2,}|\n/)[0].trim(); // hasta doble espacio o lÃ­nea nueva
         if (tok && tok.length >= 2) {
-          return tok.replace(/\s+\d$/, '').trim(); // quitar dígito suelto al final (ruido OCR)
+          return tok.replace(/\s+\d$/, '').trim(); // quitar dÃ­gito suelto al final (ruido OCR)
         }
       }
-      // 2. Intentar línea a línea: etiqueta en línea N, valor en línea N o N+1
+      // 2. Intentar lÃ­nea a lÃ­nea: etiqueta en lÃ­nea N, valor en lÃ­nea N o N+1
       for (let i = 0; i < lines.length; i++) {
         const lu = lines[i].toUpperCase();
         const pos = lu.indexOf(ku);
         if (pos === -1) continue;
-        // Valor en la misma línea (texto después del keyword + separador)
+        // Valor en la misma lÃ­nea (texto despuÃ©s del keyword + separador)
         const rest = lines[i].slice(pos + kw.length).replace(/^\s*[:\-=]?\s*/, '').trim();
         if (rest.length >= 2 && !/^[\d\s]*$/.test(rest) === false || /[A-Z0-9]{2}/.test(rest)) {
           return rest.replace(/\s+\d$/, '').trim();
         }
-        // Valor en la siguiente línea no vacía
+        // Valor en la siguiente lÃ­nea no vacÃ­a
         for (let j = i + 1; j < lines.length && j <= i + 2; j++) {
           if (lines[j] && lines[j].trim().length >= 2) {
             return lines[j].trim();
@@ -237,14 +237,14 @@ function parseFront(text) {
     return '';
   };
 
-  // Extrae primer número de teléfono formateado
+  // Extrae primer nÃºmero de telÃ©fono formateado
   const ph = (s) => {
     if (!s) return '';
     const d = s.replace(/\D/g, '').slice(-10);
     return d.length >= 10 ? fmtPhone(d) : '';
   };
 
-  // ── 3. ASEGURADORA ───────────────────────────────────────────
+  // â”€â”€ 3. ASEGURADORA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let aseg = '';
   const insurerMap = [
     ['BLUE CROSS BLUE SHIELD OF TEXAS','Blue Cross Blue Shield of Texas'],
@@ -267,7 +267,7 @@ function parseFront(text) {
   ];
   for (const [k,n] of insurerMap) { if (T.includes(k)) { aseg=n; break; } }
 
-  // ── 4. SUBSCRIBER NAME ───────────────────────────────────────
+  // â”€â”€ 4. SUBSCRIBER NAME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let subscriberName = tryPat([
     /Subscriber\s*Name\s*[:\-]?\s*([A-Z][A-Za-z\.\s\-']{2,40})/i,
     /Subscriber\s*[:\-]\s*([A-Z][A-Za-z\.\s\-']{2,40})/i,
@@ -279,13 +279,13 @@ function parseFront(text) {
     if (noisy) subscriberName = noisy[1].trim();
   }
 
-  // ── 5. MEMBER NAME ───────────────────────────────────────────
-  // Detectar nombre completo en mayúsculas (típico en tarjetas)
+  // â”€â”€ 5. MEMBER NAME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Detectar nombre completo en mayÃºsculas (tÃ­pico en tarjetas)
   let memberName = tryPat([
     /Member\s*(?:Name)?\s*[:\-]?\s*([A-Z][A-Za-z\.\s\-']{3,40})/i,
     /Insured\s*[:\-]\s*([A-Z][A-Za-z\.\s\-']{3,40})/i,
   ]);
-  // Fallback: buscar línea que sea nombre (APELLIDO, Nombre · ej: JUAN J. VASQUEZ)
+  // Fallback: buscar lÃ­nea que sea nombre (APELLIDO, Nombre Â· ej: JUAN J. VASQUEZ)
   if (!memberName) {
     for (const ln of lines) {
       if (/^[A-Z]{2,}(?:\s+[A-Z]\.?\s*)?[A-Z]{2,}$/.test(ln.trim())) {
@@ -295,39 +295,39 @@ function parseFront(text) {
   }
   if (!memberName && subscriberName) memberName = subscriberName;
 
-  // Si subscriber Name está vacío, usar memberName
+  // Si subscriber Name estÃ¡ vacÃ­o, usar memberName
   if (!subscriberName && memberName) subscriberName = memberName;
 
-  // ── 6. MEMBER ID ─────────────────────────────────────────────
+  // â”€â”€ 6. MEMBER ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let memberId = tryPat([
     /Identification\s*Number\s*[:\-]?\s*([A-Z]{0,4}\d{6,14}[A-Z0-9]*)/i,
     /Member\s*ID\s*[:\-#]?\s*([A-Z0-9]{5,20})/i,
     /MBR\s*ID\s*[:\-]?\s*([A-Z0-9]{5,20})/i,
     /Member\s*Number\s*[:\-]?\s*([A-Z0-9]{5,20})/i,
     /ID\s*#\s*[:\-]?\s*([A-Z0-9]{5,20})/i,
-    /\b([A-Z]{1,3}\d{7,14})\b/,   // ZGP829810078 — patrón genérico
+    /\b([A-Z]{1,3}\d{7,14})\b/,   // ZGP829810078 â€” patrÃ³n genÃ©rico
     /\b(\d{8,14})\b/,
   ]);
 
-  // ── 7. SUBSCRIBER ID ─────────────────────────────────────────
+  // â”€â”€ 7. SUBSCRIBER ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let subscriberId = tryPat([
     /Subscriber\s*(?:ID|#|Number)\s*[:\-]?\s*([A-Z0-9]{5,20})/i,
     /CHIP\s*Perinate\s*(?:Number|#)?\s*[:\-]?\s*([A-Z0-9]{5,20})/i,
   ]);
   if (subscriberId === memberId) subscriberId = '';
 
-  // ── 8. GROUP NUMBER ──────────────────────────────────────────
+  // â”€â”€ 8. GROUP NUMBER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let groupNum = tryPat([
     /Group\s*(?:No\.?|Number|Num|#)\s*[:\-]?\s*([A-Z0-9]{2,14})/i,
     /GRP\s*#?\s*[:\-]?\s*([A-Z0-9]{2,14})/i,
   ]);
 
-  // ── 9. PLAN NAME ─────────────────────────────────────────────
+  // â”€â”€ 9. PLAN NAME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Detectar nombre del plan (ej: BCA FAMILY, Balanced Care 1, etc.)
   let planName = tryPat([
     /Plan\s*[:\-]\s*(.{4,60})/i,
   ]);
-  // Fallback: buscar líneas con palabras clave de plan
+  // Fallback: buscar lÃ­neas con palabras clave de plan
   if (!planName) {
     for (const ln of lines) {
       if (/\b(FAMILY|INDIVIDUAL|BALANCED|CARE|GOLD|SILVER|BRONZE|PLATINUM|CLASSIC|BASIC|SELECT)\b/i.test(ln)
@@ -343,16 +343,16 @@ function parseFront(text) {
     if (bcaPlan) planName = bcaPlan[1].trim();
   }
 
-  // ── 10. PLAN TYPE ────────────────────────────────────────────
+  // â”€â”€ 10. PLAN TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let planType = '';
   for (const pt of ['PPO','HMO','EPO','POS','HDHP','HSA','MAPD','TDI','CHIP','HIOPT','QHF','PCP']) {
     if (new RegExp('\\b'+pt+'\\b').test(T)) { planType = pt; break; }
   }
 
-  // ── 11. BENEFIT PLAN CODE ────────────────────────────────────
+  // â”€â”€ 11. BENEFIT PLAN CODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let benefitPlan = tryPat([/Benefit\s*Plan\s+([A-Z0-9]{2,12})/i]);
 
-  // ── 12. EFFECTIVE DATE ───────────────────────────────────────
+  // â”€â”€ 12. EFFECTIVE DATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let effectiveDate = tryPat([
     /Coverage\s*Date\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
     /Member\s*Effective\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
@@ -360,19 +360,19 @@ function parseFront(text) {
     /Eff\.?\s*Date\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
   ]);
 
-  // ── 13. DATE OF BIRTH ────────────────────────────────────────
+  // â”€â”€ 13. DATE OF BIRTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let dob = tryPat([
     /(?:Date\s*of\s*Birth|DOB)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
   ]);
 
-  // ── 14. NETWORK ──────────────────────────────────────────────
+  // â”€â”€ 14. NETWORK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let network = '';
   if (T.includes('IN NETWORK COVERAGE ONLY')) network = 'In Network Coverage Only';
   else if (T.includes('IN-NETWORK'))           network = 'In Network';
   else if (T.includes('IN NETWORK'))           network = 'In Network';
   else if (T.includes('OUT OF NETWORK'))       network = 'Out of Network';
 
-  // ── 15. TYPE OF COVERAGE ─────────────────────────────────────
+  // â”€â”€ 15. TYPE OF COVERAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let coverage = tryPat([/Type\s*(?:of)?\s*Coverage\s*[:\-]?\s*(\w[\w\s\-]{0,30})/i]);
   // BCBS TX: Detectar "BCA FAMILY TDI TX-EX" etc.
   if (!coverage) {
@@ -380,17 +380,17 @@ function parseFront(text) {
     else if (T.includes('TDI')) coverage = 'TDI';
   }
 
-  // ── 16. DEPENDENTS ───────────────────────────────────────────
+  // â”€â”€ 16. DEPENDENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let dependents = '';
   const depLines = collapsed.match(/Dependent\s+(?:One|Two|Three|Four|\d+)|Member\s+\d+/gi);
-  if (depLines) dependents = depLines.join(' · ');
+  if (depLines) dependents = depLines.join(' Â· ');
   // Buscar "Pediatric Dental" como indicador de cobertura de dependientes
   if (!dependents && T.includes('PEDIATRIC DENTAL')) dependents = 'Pediatric Dental (under 19)';
 
-  // ── 17. COPAGOS ──────────────────────────────────────────────
+  // â”€â”€ 17. COPAGOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let copayPCP = '', copaySpec = '', copayER = '', copayUrgent = '';
 
-  // BCBS TX: "OV/Spec $40/80" → PCP=$40, Specialist=$80
+  // BCBS TX: "OV/Spec $40/80" â†’ PCP=$40, Specialist=$80
   const ovSpec = collapsed.match(/OV\s*\/\s*Spec\s*\$?(\d+)\s*\/\s*(\d+)/i);
   if (ovSpec) { copayPCP = '$' + ovSpec[1]; copaySpec = '$' + ovSpec[2]; }
 
@@ -411,40 +411,40 @@ function parseFront(text) {
   ]);
   copayUrgent = tryPat([/Urgent\s*Care\s*[:\-]?\s*(\$[\d,.]+)/i]);
 
-  // ── 18. DEDUCTIBLE ───────────────────────────────────────────
+  // â”€â”€ 18. DEDUCTIBLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let deductible = tryPat([
     /Deductible\s*(?:\(Med\/?Rx\))?\s*[:\-]?\s*(\$[\d,.]+)/i,
     /Deductible\s+(\$[\d,.]+)/i,
   ]);
 
-  // ── 19. COINSURANCE ──────────────────────────────────────────
+  // â”€â”€ 19. COINSURANCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let coinsurance = tryPat([
     /Coinsurance\s*(?:\(Med\/?Rx\))?\s*[:\-]?\s*(\d+%)/i,
     /Co[- ]?insurance\s+(\d+%)/i,
   ]);
 
-  // ── 20. RxBIN ────────────────────────────────────────────────
+  // â”€â”€ 20. RxBIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let rxBin = tryPat([
     /RxBIN\s*[:\-]?\s*(\d{4,10})/i,
     /Rx\s*BIN\s*#?\s*[:\-]?\s*(\d{4,10})/i,
     /BIN\s*[:\-]?\s*(\d{4,10})/i,
   ]);
 
-  // ── 21. RxPCN ────────────────────────────────────────────────
+  // â”€â”€ 21. RxPCN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let rxPcn = tryPat([
     /RxPCN\s*[:\-]?\s*([A-Z0-9]{2,12})/i,
     /Rx\s*PCN\s*[:\-]?\s*([A-Z0-9]{2,12})/i,
     /PCN\s*[:\-]?\s*([A-Z0-9]{2,12})/i,
   ]);
 
-  // ── 22. RxGRP ────────────────────────────────────────────────
+  // â”€â”€ 22. RxGRP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let rxGrp = tryPat([
     /RxGRP\s*[:\-]?\s*([A-Z0-9]{2,14})/i,
     /Rx\s*GR(?:P|OUP)\s*[:\-]?\s*([A-Z0-9]{2,14})/i,
     /Rx\s*Group\s*[:\-]?\s*([A-Z0-9]{2,14})/i,
   ]);
 
-  // ── 23. PHARMACY ADMINISTRATOR ───────────────────────────────
+  // â”€â”€ 23. PHARMACY ADMINISTRATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let rxAdmin = tryPat([
     /Pharmacy\s*Benefits?\s*Manager\s*[:\-]?\s*([A-Za-z\s]{2,25})/i,
     /Administered\s*by\s*[:\-]?\s*([A-Za-z\s]{2,25})/i,
@@ -457,7 +457,7 @@ function parseFront(text) {
   }
   if (rxAdmin) rxAdmin = rxAdmin.trim();
 
-  // ── 24. DRUG TIERS ───────────────────────────────────────────
+  // â”€â”€ 24. DRUG TIERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // BCBS TX: "Rx Level 1 $10/20/70" y "Rx Level 2 $120/150/250"
   let rxGeneric = tryPat([
     /Rx\s*Level\s*1\s*(\$[\d]+\/[\d]+\/[\d]+)/i,
@@ -474,7 +474,7 @@ function parseFront(text) {
     /Specialty\s*(?:Drugs?)?\s*[:\-]?\s*(\$[\d,.]+)/i,
   ]);
 
-  // ── 25. PCP / PROVIDER ───────────────────────────────────────
+  // â”€â”€ 25. PCP / PROVIDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let pcpName = tryPat([/PCP\s*(?:Name)?\s*[:\-]\s*(.{3,40})/i]);
   let pcpPhone = ph(tryPat([/PCP\s*Phone\s*[:\-]?\s*([\d\s\(\)\-\.]{10,})/i]));
   let pcpEffDate = tryPat([/PCP\s*Effective\s*Date\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i]);
@@ -482,7 +482,7 @@ function parseFront(text) {
   let providerPhone = ph(tryPat([/Provider\s*Phone\s*[:\-]?\s*([\d\s\(\)\-\.]{10,})/i]));
   let chipNum = tryPat([/CHIP\s*Perinate\s*(?:Number)?\s*[:\-]?\s*([A-Z0-9]{3,18})/i]);
 
-  // ── 26. GUARDAR Y POBLAR CAMPOS ──────────────────────────────
+  // â”€â”€ 26. GUARDAR Y POBLAR CAMPOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fill = (id, val, isPhone=false) => setField(id, val, isPhone);
 
   fill('f_aseguradora',   aseg);
@@ -528,20 +528,20 @@ function parseFront(text) {
     pcpName, pcpPhone, pcpEffDate, providerGroup, providerPhone, chipNum };
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PARSER REVERSO — sin lookbehind (compatible con Safari)
-//  Formato BCBS TX: "1.800.521.2227" · "1:888-680-8046"
-//  Detecta: Customer Service · Preauth Medical · Provider Service
-//           Prof Network · Blue Card · MULTILIFE · PRIME
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PARSER REVERSO â€” sin lookbehind (compatible con Safari)
+//  Formato BCBS TX: "1.800.521.2227" Â· "1:888-680-8046"
+//  Detecta: Customer Service Â· Preauth Medical Â· Provider Service
+//           Prof Network Â· Blue Card Â· MULTILIFE Â· PRIME
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function parseBack(text) {
-  // ── Normalizar separadores de teléfono SIN lookbehind ────────
-  // 1.800.521.2227 → 1-800-521-2227 | 1:888 → 1-888
+  // â”€â”€ Normalizar separadores de telÃ©fono SIN lookbehind â”€â”€â”€â”€â”€â”€â”€â”€
+  // 1.800.521.2227 â†’ 1-800-521-2227 | 1:888 â†’ 1-888
   const norm = text
-    .replace(/(\d)\.(\d)/g, '$1-$2')   // puntos entre dígitos → guión
-    .replace(/(\d):(\d)/g, '$1-$2');    // dos puntos entre dígitos → guión
+    .replace(/(\d)\.(\d)/g, '$1-$2')   // puntos entre dÃ­gitos â†’ guiÃ³n
+    .replace(/(\d):(\d)/g, '$1-$2');    // dos puntos entre dÃ­gitos â†’ guiÃ³n
 
-  // ── Helper: extraer teléfono formateado ──────────────────────
+  // â”€â”€ Helper: extraer telÃ©fono formateado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const extractPhone = (src, labelPatterns) => {
     const PNUM = '(1?[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-\\.]\\d{3}[\\s\\-\\.]\\d{4})';
     for (const lbl of labelPatterns) {
@@ -555,7 +555,7 @@ function parseBack(text) {
     return '';
   };
 
-  // ── Extraer todos los teléfonos del texto normalizado ────────
+  // â”€â”€ Extraer todos los telÃ©fonos del texto normalizado â”€â”€â”€â”€â”€â”€â”€â”€
   const allPhones = [];
   const normLines = norm.split(/\r?\n/);
   for (const ln of normLines) {
@@ -566,7 +566,7 @@ function parseBack(text) {
     });
   }
 
-  // ── Member Services (Customer Service = BCBS TX) ─────────────
+  // â”€â”€ Member Services (Customer Service = BCBS TX) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let phone = extractPhone(norm, [
     'Customer\\s*Service',
     'Member\\s*Services?',
@@ -575,10 +575,10 @@ function parseBack(text) {
     'Call\\s*Us',
     'Questions?',
   ]);
-  // Fallback: primer teléfono del texto
+  // Fallback: primer telÃ©fono del texto
   if (!phone && allPhones.length > 0) phone = allPhones[0].phone;
 
-  // ── Prior Authorization ───────────────────────────────────────
+  // â”€â”€ Prior Authorization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let phoneAuth = extractPhone(norm, [
     'Preauth\\s*(?:Medical)?',
     'Pre\\s*Auth(?:orization)?',
@@ -587,23 +587,23 @@ function parseBack(text) {
     'Authorization',
   ]);
 
-  // ── Pharmacy ─────────────────────────────────────────────────
-  let phonePharmacy = extractPhone(norm, ['Pharmacy','Farmacia']);
+  // â”€â”€ Pharmacy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  let phonePharmacy = extractPhone(norm, ['Pharmacy','Pharmacy']);
 
-  // ── Nurse HelpLine ───────────────────────────────────────────
+  // â”€â”€ Nurse HelpLine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let phoneNurse = extractPhone(norm, [
     '24.?Hour\\s*Nurse',
     'Nurse\\s*(?:Help)?\\s*Line',
     'Nurse',
   ]);
 
-  // ── Behavioral Health ────────────────────────────────────────
+  // â”€â”€ Behavioral Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let phoneBehavioral = extractPhone(norm, [
     'Behavioral\\s*Health',
     'Mental\\s*Health',
   ]);
 
-  // ── Provider Service / Prof Network (a notas extra) ──────────
+  // â”€â”€ Provider Service / Prof Network (a notas extra) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const provSvc = extractPhone(norm, ['Provider\\s*Service','Provider\\s*Network']);
   const profNet = extractPhone(norm, ['Prof(?:essional)?\\s*Network']);
   const blueCardM = norm.match(/Blue\s*Card\s*Access[^\d]*(1[\d\s\-\.]{10,14})/i);
@@ -617,12 +617,12 @@ function parseBack(text) {
   if (blueCard)   extraNotes.push('Blue Card Access: ' + blueCard);
   if (multi)      extraNotes.push('MULTILIFE: '        + multi);
 
-  // ── Sitio web ────────────────────────────────────────────────
+  // â”€â”€ Sitio web â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let website = '';
   const webM = text.match(/(?:www\.)?([a-zA-Z0-9\-]+\.(?:com|net|org)(?:\/[A-Za-z0-9\-\/]*)?)/i);
   if (webM) website = webM[0].toLowerCase().startsWith('www.') ? webM[0] : 'www.' + webM[1];
 
-  // ── Pharmacy Benefits Manager en reverso ─────────────────────
+  // â”€â”€ Pharmacy Benefits Manager en reverso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const rawUp = text.toUpperCase();
   if (!v('f_rxAdmin')) {
     for (const adm of ['PRIME','Express Scripts','CVS Caremark','OptumRx','MedImpact','Navitus']) {
@@ -630,13 +630,13 @@ function parseBack(text) {
     }
   }
 
-  // ── Poblar extraInfo con datos adicionales ────────────────────
+  // â”€â”€ Poblar extraInfo con datos adicionales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (extraNotes.length > 0) {
     const ei = document.getElementById('f_extraInfo');
     if (ei && !ei.value.trim()) ei.value = extraNotes.join('\n');
   }
 
-  // ── Poblar campos ────────────────────────────────────────────
+  // â”€â”€ Poblar campos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   setField('f_phone',          phone,          true);
   setField('f_phoneAuth',      phoneAuth,      false);
   setField('f_phonePharmacy',  phonePharmacy,  false);
@@ -654,7 +654,7 @@ function parseBack(text) {
 
 
 
-// ── HELPERS ────────────────────────────────────────────────────
+// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setField(id, value, isPhone=false) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -672,7 +672,7 @@ function fmtPhone(d) {
   return `(${clean.slice(0,3)}) ${clean.slice(3,6)}-${clean.slice(6)}`;
 }
 
-// ── RESPUESTAS DEL SCRIPT ──────────────────────────────────────
+// â”€â”€ RESPUESTAS DEL SCRIPT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setAnswer(key, value, btn, cls) {
   btn.closest(".q-content").querySelectorAll(".ans-btn").forEach(b=>{
     b.classList.remove("sel-yes","sel-no","sel-nr");
@@ -681,7 +681,7 @@ function setAnswer(key, value, btn, cls) {
   State.answers[key] = value;
 }
 
-// ── EVALUACIÓN ─────────────────────────────────────────────────
+// â”€â”€ EVALUACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function evaluar(data) {
   const cobOK  = ["Si","Parcial"].includes(data.cobertura);
   const authOK = data.autorizacion &&
@@ -689,7 +689,7 @@ function evaluar(data) {
   return (cobOK && authOK) ? "APTO" : "NO APTO";
 }
 
-// ── SUBIR ARCHIVO ─────────────────────────────────────────────
+// â”€â”€ SUBIR ARCHIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function uploadFile(file, side) {
   if (!file) return null;
   const ref = firebase.storage().ref()
@@ -698,14 +698,14 @@ async function uploadFile(file, side) {
   return await ref.getDownloadURL();
 }
 
-// ── RECOPILAR DATOS ────────────────────────────────────────────
+// â”€â”€ RECOPILAR DATOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function recopilar() {
   return {
     // Paciente
     nombre:          v("f_subscriberName") || v("f_memberName"),
     fechaNac:        v("f_dob"),
     telefono:        v("f_phone"),
-    // Seguro — Identificación
+    // Seguro â€” IdentificaciÃ³n
     aseguradora:     v("f_aseguradora"),
     subscriberName:  v("f_subscriberName"),
     memberName:      v("f_memberName"),
@@ -725,14 +725,14 @@ function recopilar() {
     copayUrgent:     v("f_copayUrgent"),
     deductible:      v("f_deductible"),
     coinsurance:     v("f_coinsurance"),
-    // Farmacia
+    // Pharmacy
     rxBin:           v("f_rxBin"),
     rxPcn:           v("f_rxPcn"),
     rxGrp:           v("f_rxGrp"),
     // PCP
     pcpName:         v("f_pcpName"),
     pcpPhone:        v("f_pcpPhone"),
-    // Teléfono del reverso
+    // TelÃ©fono del reverso
     phoneSeguro:     v("f_phone"),
     phoneAuth:       v("f_phoneAuth"),
     website:         v("f_websiteBack"),
@@ -749,7 +749,7 @@ function recopilar() {
     notasRep:        v("q6notes"),
     repName:         v("repName"),
     refNum:          v("refNum"),
-    // Decisión de autorización final
+    // DecisiÃ³n de autorizaciÃ³n final
     autorizacionFinal: State.autorizacionFinal || "",
     // Meta
     emailDestino: "michaelandresfloreshenao@gmail.com",
@@ -757,9 +757,9 @@ function recopilar() {
   };
 }
 
-// ── MODAL DE AUTORIZACIÓN ──────────────────────────────────────
+// â”€â”€ MODAL DE AUTORIZACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function submitForm() {
-  // Mostrar el modal de decisión antes de proceder
+  // Mostrar el modal de decisiÃ³n antes de proceder
   document.getElementById('authModal').classList.add('visible');
 }
 
@@ -776,7 +776,7 @@ function confirmarAutorizacion(decision) {
 async function _doSubmit() {
   const btn = document.getElementById("btnSubmit");
   btn.disabled = true;
-  btn.innerHTML = "<span class='material-symbols-outlined'>hourglass_empty</span> Procesando...";
+  btn.innerHTML = "<span class='material-symbols-outlined'>hourglass_empty</span> Processing...";
   const [ss, ok, er] = [
     document.getElementById("statusSending"),
     document.getElementById("statusSuccess"),
@@ -787,7 +787,7 @@ async function _doSubmit() {
   er.classList.remove("visible");
 
   try {
-    ss.querySelector("span:last-child").textContent = "Subiendo imágenes de la tarjeta...";
+    ss.querySelector("span:last-child").textContent = "Uploading card images...";
     const [urlFront, urlBack] = await Promise.all([
       uploadFile(State.files.front, "frente"),
       uploadFile(State.files.back, "reverso"),
@@ -800,7 +800,7 @@ async function _doSubmit() {
     data.b64Back    = State.b64.back  || "";
     data.resultado  = evaluar(data);
 
-    ss.querySelector("span:last-child").textContent = "Guardando expediente...";
+    ss.querySelector("span:last-child").textContent = "Saving record...";
     const docRef = await firebase.firestore().collection("pacientes").add(
       Object.fromEntries(Object.entries(data).filter(([k]) => !k.startsWith("b64")))
     );
@@ -822,13 +822,13 @@ async function _doSubmit() {
     console.error(err);
     ss.classList.remove("visible");
     er.classList.add("visible");
-    document.getElementById("errorMsg").textContent = "Error: " + (err.message || "Intenta de nuevo.");
+    document.getElementById("errorMsg").textContent = "Error: " + (err.message || "Please try again.");
     btn.disabled = false;
-    btn.innerHTML = "<span class='material-symbols-outlined'>send</span> Evaluar y Enviar Informe";
+    btn.innerHTML = "<span class='material-symbols-outlined'>send</span> Evaluate &amp; Send Report";
   }
 }
 
-// ── RESULTADO FINAL ────────────────────────────────────────────
+// â”€â”€ RESULTADO FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showResultado(resultado, data) {
   const esApto = resultado==="APTO";
   document.getElementById("progressWrapper").style.display="none";
@@ -841,82 +841,82 @@ function showResultado(resultado, data) {
   const row=(label,val,accent=false)=>`
     <div class="summary-row">
       <span class="summary-key">${label}</span>
-      <span class="summary-val${accent?" summary-accent":""}">${val||"—"}</span>
+      <span class="summary-val${accent?" summary-accent":""}">${val||"â€”"}</span>
     </div>`;
   const chip=(val,good)=>`
-    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"—"}</span>`;
+    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"â€”"}</span>`;
 
   rc.innerHTML=`
     <div class="result-icon-wrapper">${esApto?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
     <div class="result-badge">${esApto?"<span class='material-symbols-outlined'>check_circle</span> APTO":"<span class='material-symbols-outlined'>cancel</span> NO APTO"}</div>
     <p class="result-message">
       ${esApto
-        ?`<strong>${data.nombre}</strong> cumple los criterios de elegibilidad para cirugía bariátrica.`
-        :`<strong>${data.nombre}</strong> NO cumple todos los criterios en este momento.`}
+        ?`<strong>${data.nombre}</strong> meets the eligibility criteria for bariatric surgery.`
+        :`<strong>${data.nombre}</strong> does NOT meet all the criteria at this time.`}
     </p>
 
     ${data.b64Front||data.b64Back?`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
       ${data.b64Front?`<div>
-        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:0 0 6px;">Frente</p>
-        <img src="${data.b64Front}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Frente tarjeta"/>
+        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:0 0 6px;">Front</p>
+        <img src="${data.b64Front}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card front"/>
       </div>`:"<div></div>"}
       ${data.b64Back?`<div>
-        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin:0 0 6px;">Reverso</p>
-        <img src="${data.b64Back}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Reverso tarjeta"/>
+        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin:0 0 6px;">Back</p>
+        <img src="${data.b64Back}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card back"/>
       </div>`:"<div></div>"}
     </div>`:""}
 
     <div class="summary-table">
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">Identificación del Seguro</p>
-      ${row("Aseguradora", data.aseguradora)}
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">IdentificaciÃ³n del Seguro</p>
+      ${row("Insurance Company", data.aseguradora)}
       ${row("Subscriber Name", data.subscriberName)}
       ${row("Member Name", data.memberName)}
       ${row("Member ID", data.memberId, true)}
       ${row("Subscriber ID", data.subscriberId)}
       ${row("Group Number", data.groupNum, true)}
       ${row("Plan", data.planName)}
-      ${row("Tipo de Plan", data.planType)}
+      ${row("Plan Type", data.planType)}
       ${row("Effective Date", data.effectiveDate)}
-      ${row("Red", data.network)}
+      ${row("Network", data.network)}
 
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:14px 0 8px;">Copagos y Costos</p>
-      ${row("Copago PCP", data.copayPCP)}
-      ${row("Copago Especialista", data.copaySpec)}
-      ${row("Copago ER", data.copayER)}
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:14px 0 8px;">Copays and Costs</p>
+      ${row("PCP Copay", data.copayPCP)}
+      ${row("Specialist Copay", data.copaySpec)}
+      ${row("ER Copay", data.copayER)}
       ${row("Urgent Care", data.copayUrgent)}
-      ${row("Deducible", data.deductible)}
+      ${row("Deductible", data.deductible)}
       ${row("Coinsurance", data.coinsurance)}
 
-      ${data.rxBin||data.rxPcn?`<p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--secondary);margin:14px 0 8px;">Farmacia</p>`:``}
+      ${data.rxBin||data.rxPcn?`<p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--secondary);margin:14px 0 8px;">Pharmacy</p>`:``}
       ${row("RxBIN", data.rxBin)}
       ${row("RxPCN", data.rxPcn)}
       ${row("RxGroup", data.rxGrp)}
 
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Resultado de la Verificación</p>
-      <div class="summary-row"><span class="summary-key">¿Cubierta?</span>${chip(data.cobertura,["Si","Parcial"].includes(data.cobertura))}</div>
-      <div class="summary-row"><span class="summary-key">Autorización</span>${chip(data.autorizacion,data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida"))}</div>
-      ${row("Deducible total (llamada)", data.deducibleTotal)}
-      ${row("Deducible cumplido", data.deducibleMet)}
-      ${row("Copago/Coseguro (llamada)", data.copago)}
-      ${row("Out-of-Pocket Máx.", data.oopMax)}
-      ${row("Rep del seguro", data.repName)}
-      ${row("Referencia #", data.refNum)}
-      ${data.notasRep?`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="summary-key">Notas adicionales</span><span class="summary-val" style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${data.notasRep}</span></div>`:""}
-      ${row("ID Expediente", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId||"—"}</span>`)}
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Resultado de la VerificaciÃ³n</p>
+      <div class="summary-row"><span class="summary-key">ÂCovered?</span>${chip(data.cobertura,["Si","Parcial"].includes(data.cobertura))}</div>
+      <div class="summary-row"><span class="summary-key">AutorizaciÃ³n</span>${chip(data.autorizacion,data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida"))}</div>
+      ${row("Deductible (call)", data.deducibleTotal)}
+      ${row("Deductible met", data.deducibleMet)}
+      ${row("Copay/Coinsurance (call)", data.copago)}
+      ${row("Out-of-Pocket MÃ¡x.", data.oopMax)}
+      ${row("Insurance Rep", data.repName)}
+      ${row("Reference #", data.refNum)}
+      ${data.notasRep?`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="summary-key">Additional notes</span><span class="summary-val" style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${data.notasRep}</span></div>`:""}
+      ${row("Record ID", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId||"â€”"}</span>`)}
     </div>
 
     <div style="margin-top:18px;padding:14px 18px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-sm);text-align:center;">
-      <p style="font-size:13px;color:#34d399;margin:0;">📧 Informe enviado automáticamente a <strong>michaelandresfloreshenao@gmail.com</strong></p>
+      <p style="font-size:13px;color:#34d399;margin:0;">ðŸ“§ Informe enviado automÃ¡ticamente a <strong>michaelandresfloreshenao@gmail.com</strong></p>
     </div>
-    <button class="btn btn-secondary" style="margin-top:18px;" onclick="resetAll()">+ Evaluar Nuevo Paciente</button>
+    <button class="btn btn-secondary" style="margin-top:18px;" onclick="resetAll()">+ Evaluate New Patient</button>
   `;
 
   window.scrollTo({top:0,behavior:"smooth"});
   if (esApto) confetti();
 }
 
-// ── RESET ──────────────────────────────────────────────────────
+// â”€â”€ RESET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function resetAll() {
   State.step=1;
   State.files={front:null,back:null};
@@ -944,7 +944,7 @@ function resetAll() {
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-// ── CONFETTI ───────────────────────────────────────────────────
+// â”€â”€ CONFETTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function confetti() {
   const c=document.getElementById("confettiContainer");
   const cols=["#0077ce","#10b981","#3b82f6","#f59e0b","#ec4899","#06b6d4"];
@@ -958,10 +958,10 @@ function confetti() {
 
 document.addEventListener("DOMContentLoaded",()=>{
   updateProgress(1);
-  console.log("✅ MedAuth Pro — motor OCR multi-formato cargado");
+  console.log("âœ… MedAuth Pro â€” motor OCR multi-formato cargado");
 });
 
-// ── UI TOGGLER ─────────────────────────────────────────────────
+// â”€â”€ UI TOGGLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.toggleOCRData = function() {
   const sec = document.getElementById("extractedSection");
   const icon = document.getElementById("ocrToggleIcon");
@@ -970,6 +970,7 @@ window.toggleOCRData = function() {
     icon.innerHTML = "Ocultar datos <span class='material-symbols-outlined'>expand_less</span>";
   } else {
     sec.style.display = "none";
-    icon.innerHTML = "Ver datos extraídos <span class='material-symbols-outlined'>expand_more</span>";
+    icon.innerHTML = "Ver datos extraÃ­dos <span class='material-symbols-outlined'>expand_more</span>";
   }
 };
+
