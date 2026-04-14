@@ -756,8 +756,7 @@ function recopilar() {
 
 // ── SUBMIT ─────────────────────────────────────────────────────
 async function submitForm() {
-  if (!State.answers.q1) { alert("⚠️ Responde la pregunta 1: ¿Está cubierta?"); return; }
-  if (!State.answers.q2) { alert("⚠️ Responde la pregunta 2: ¿Autorización previa?"); return; }
+
 
   const btn=document.getElementById("btnSubmit");
   btn.disabled=true; btn.innerHTML="<span class='material-symbols-outlined'>hourglass_empty</span> Procesando...";

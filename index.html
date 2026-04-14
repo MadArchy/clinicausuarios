@@ -713,11 +713,6 @@
               <div class="q-content">
                 <div class="q-en">"Is <strong>bariatric surgery</strong> covered under my plan?"</div>
                 <div class="q-es">¿La cirugía bariátrica está cubierta bajo mi plan?</div>
-                <div class="q-answers">
-                  <button class="ans-btn" id="q1si"  onclick="setAnswer('q1','Si','sel-yes',this)"><span class="material-symbols-outlined">check_circle</span> Sí, cubierta</button>
-                  <button class="ans-btn" id="q1par" onclick="setAnswer('q1','Parcial','sel-nr',this)">⚡ Parcialmente</button>
-                  <button class="ans-btn" id="q1no"  onclick="setAnswer('q1','No','sel-no',this)"><span class="material-symbols-outlined">cancel</span> No cubierta</button>
-                </div>
               </div>
             </div>
 
@@ -727,12 +722,6 @@
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>prior authorization</strong>? If so, has it been obtained?"</div>
                 <div class="q-es">¿Necesito autorización previa? ¿Ya fue obtenida?</div>
-                <div class="q-answers">
-                  <button class="ans-btn" onclick="setAnswer('q2','No Requerida','sel-yes',this)"><span class="material-symbols-outlined">check_circle</span> No requerida</button>
-                  <button class="ans-btn" onclick="setAnswer('q2','Obtenida','sel-yes',this)"><span class="material-symbols-outlined">check_circle</span> Sí, obtenida</button>
-                  <button class="ans-btn" onclick="setAnswer('q2','Requerida — Pendiente','sel-no',this)"><span class="material-symbols-outlined">hourglass_empty</span> Requerida / Pendiente</button>
-                  <button class="ans-btn" onclick="setAnswer('q2','Denegada','sel-no',this)"><span class="material-symbols-outlined">cancel</span> Denegada</button>
-                </div>
               </div>
             </div>
 
@@ -742,10 +731,6 @@
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>referral from my PCP</strong>?"</div>
                 <div class="q-es">¿Necesito referido de mi médico de cabecera?</div>
-                <div class="q-answers">
-                  <button class="ans-btn" onclick="setAnswer('q3','No Requerido','sel-yes',this)"><span class="material-symbols-outlined">check_circle</span> No requerido</button>
-                  <button class="ans-btn" onclick="setAnswer('q3','Requerido','sel-no',this)"><span class="material-symbols-outlined">warning</span> Requerido</button>
-                </div>
               </div>
             </div>
 
@@ -755,10 +740,6 @@
               <div class="q-content">
                 <div class="q-en">"Does the surgery have to be done at a <strong>specific hospital or facility</strong>?"</div>
                 <div class="q-es">¿La cirugía debe hacerse en un hospital específico?</div>
-                <div class="q-answers">
-                  <button class="ans-btn" onclick="setAnswer('q4','Sí, específico','sel-no',this)"><span class="material-symbols-outlined">local_hospital</span> Sí, específico</button>
-                  <button class="ans-btn" onclick="setAnswer('q4','Puedo elegir','sel-yes',this)"><span class="material-symbols-outlined">check_circle</span> Puedo elegir</button>
-                </div>
                 <input class="q-input-field" type="text" id="q4detail" placeholder="Si es específico — ¿cuál hospital o facilidad?" />
               </div>
             </div>
@@ -887,6 +868,6 @@
   });
 </script>
 
-<script src="js/app.js?v=7"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>
