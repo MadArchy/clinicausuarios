@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=5" />
+  <link rel="stylesheet" href="css/styles.css?v=6" />
 
   <style>
     /* ── TARJETA DOS CARAS ── */
@@ -36,10 +36,16 @@
 
     .card-drop {
       border:2px dashed rgba(0,0,0,0.1); border-radius:var(--radius);
-      padding:24px 16px; text-align:center; cursor:pointer; transition:var(--transition);
+      padding:20px 16px; text-align:center; cursor:pointer; transition:var(--transition);
       background:rgba(0,0,0,0.02); position:relative;
-      min-height:160px; display:flex; flex-direction:column;
-      align-items:center; justify-content:center; gap:8px;
+      min-height:140px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:6px;
+    }
+    @media(max-width:640px){
+      .card-drop { padding:16px 12px; min-height:110px; gap:5px; border-radius:10px; }
+      .card-drop-icon { font-size:22px !important; }
+      .card-drop-title { font-size:12px !important; }
+      .card-drop-sub { font-size:10px !important; line-height:1.3; }
     }
     .card-drop input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
     .front-drop:hover,.front-drop.dragover { border-color:var(--primary); background:rgba(0, 119, 206,0.06); }
@@ -83,14 +89,19 @@
     @media(max-width:640px){ .field-span-2 { grid-column:span 1; } }
 
     /* ── SCRIPT DE LLAMADA ── */
-    .call-card { background:linear-gradient(135deg,rgba(0, 119, 206,0.1),rgba(59,130,246,0.06)); border:1px solid rgba(0, 119, 206,0.25); border-radius:var(--radius-lg); padding:32px 36px; position:relative; overflow:hidden; }
+    .call-card { background:linear-gradient(135deg,rgba(0, 119, 206,0.1),rgba(59,130,246,0.06)); border:1px solid rgba(0, 119, 206,0.25); border-radius:var(--radius-lg); padding:28px 28px; position:relative; overflow:hidden; }
+    @media(max-width:640px){ .call-card { padding:20px 16px; border-radius:var(--radius); } }
     .call-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent)); }
-    .call-top { text-align:center; margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid rgba(0,0,0,0.07); }
-    .call-phone-emoji { font-size:40px; margin-bottom:12px; display:block; animation:ring 2.5s ease-in-out infinite; }
+    .call-top { text-align:center; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid rgba(0,0,0,0.07); }
+    @media(max-width:640px){ .call-top { margin-bottom:16px; padding-bottom:16px; } }
+    .call-phone-emoji { font-size:36px; margin-bottom:10px; display:block; animation:ring 2.5s ease-in-out infinite; }
     @keyframes ring { 0%,100%{transform:rotate(0)} 8%{transform:rotate(-15deg)} 16%{transform:rotate(15deg)} 24%{transform:rotate(-10deg)} 32%{transform:rotate(10deg)} 40%{transform:rotate(0)} }
-    .call-main-title { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--text-primary); margin:0 0 8px; }
-    .call-main-sub { font-size:14px; color:var(--text-secondary); line-height:1.6; margin:0; }
-    .call-phone-chip { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:10px 22px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:99px; font-size:15px; font-weight:700; font-family:'Space Grotesk',monospace; color:var(--apto); letter-spacing:.03em; }
+    .call-main-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--text-primary); margin:0 0 6px; }
+    @media(max-width:640px){ .call-main-title { font-size:18px; } }
+    .call-main-sub { font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0; }
+    @media(max-width:640px){ .call-main-sub { font-size:12px; } }
+    .call-phone-chip { display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:10px 18px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:99px; font-size:14px; font-weight:700; font-family:'Space Grotesk',monospace; color:var(--apto); letter-spacing:.03em; }
+    @media(max-width:640px){ .call-phone-chip { font-size:13px; padding:8px 14px; } }
     .call-section { margin-bottom:24px; }
     .call-section-tag { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--text-muted); margin-bottom:12px; display:flex; align-items:center; gap:10px; }
     .call-section-tag::after { content:''; flex:1; height:1px; background:rgba(0,0,0,0.06); }
@@ -108,12 +119,21 @@
     .q-list { display:flex; flex-direction:column; gap:0; }
     .q-item { display:grid; grid-template-columns:36px 1fr; gap:0 14px; padding:18px 0; border-bottom:1px solid rgba(0,0,0,0.05); align-items:start; }
     .q-item:last-child { border-bottom:none; }
+    @media(max-width:640px){
+      .q-item { padding:14px 0; gap:0 10px; }
+      .q-num { width:30px; height:30px; font-size:12px; border-radius:6px; }
+    }
     .q-num { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; margin-top:2px; }
     .q-en { font-size:15px; color:var(--text-primary); font-weight:600; line-height:1.4; margin-bottom:2px; font-style:italic; }
+    @media(max-width:640px){ .q-en { font-size:13px; } }
     .q-en strong { font-style:normal; }
     .q-es { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
-    .q-answers { display:flex; flex-wrap:wrap; gap:8px; }
-    .ans-btn { padding:7px 16px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:rgba(0,0,0,0.03); color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; }
+    @media(max-width:640px){ .q-es { font-size:11px; margin-bottom:10px; } }
+    .ans-btn { padding:10px 16px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:rgba(0,0,0,0.03); color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; min-height:44px; display:inline-flex; align-items:center; gap:6px; }
+    @media(max-width:640px){
+      .q-answers { gap:8px; }
+      .ans-btn { flex:1 1 auto; min-width:calc(50% - 4px); justify-content:center; font-size:12px; padding:10px 10px; }
+    }
     .ans-btn:hover { border-color:rgba(0, 119, 206,0.5); color:var(--text-primary); background:rgba(0, 119, 206,0.07); }
     .ans-btn.sel-yes { border-color:var(--apto);    background:rgba(16,185,129,0.12); color:var(--apto);   font-weight:700; }
     .ans-btn.sel-no  { border-color:var(--no-apto); background:rgba(239,68,68,0.1);   color:var(--no-apto); font-weight:700; }
@@ -124,14 +144,47 @@
     .fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
     @media(max-width:480px){ .fin-grid { grid-template-columns:1fr; } }
     .fin-item label { font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:5px; }
-    .hang-up-box { display:flex; align-items:flex-start; gap:14px; padding:18px 20px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); margin-top:8px; }
-    .hang-up-icon { font-size:24px; flex-shrink:0; }
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+    @media(max-width:640px){ .rep-grid { grid-template-columns:1fr; gap:10px; } }
+    .hang-up-box { display:flex; align-items:flex-start; gap:12px; padding:16px 18px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); margin-top:8px; }
+    .hang-up-icon { font-size:22px; flex-shrink:0; }
     .hang-up-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:#fbbf24; margin-bottom:4px; }
     .hang-up-list { font-size:13px; color:#fcd34d; line-height:1.6; }
     .hang-up-dots { color:#f59e0b; margin:0 4px; }
-    .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
-    @media(max-width:640px){ .rep-grid { grid-template-columns:1fr; } }
+    @media(max-width:640px){
+      .hang-up-box { flex-direction:column; gap:6px; padding:14px 14px; }
+      .hang-up-list { font-size:12px; line-height:1.7; }
+    }
   
+    /* ── PATIENT CHIPS ── */
+    .patient-chips-grid {
+      margin-top:16px; display:grid;
+      grid-template-columns:1fr 1fr 1fr; gap:10px;
+    }
+    @media(max-width:500px){
+      .patient-chips-grid { grid-template-columns:1fr 1fr; }
+      .patient-chips-grid .patient-chip:first-child { grid-column: span 2; }
+    }
+    .patient-chip {
+      background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.08);
+      border-radius:10px; padding:10px 14px; text-align:left;
+    }
+    .patient-chip-blue { background:rgba(0, 119, 206,0.08); border-color:rgba(0, 119, 206,0.2); }
+    .patient-chip-dark { background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.2); }
+    .patient-chip-label {
+      font-size:9px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.1em; color:var(--text-muted); margin-bottom:4px;
+    }
+    .patient-chip-val {
+      font-size:14px; font-weight:700; color:var(--text-primary);
+      word-break:break-all; line-height:1.3;
+    }
+    @media(max-width:640px){
+      .patient-chip { padding:8px 12px; border-radius:8px; }
+      .patient-chip-val { font-size:12px; }
+      .patient-chip-label { font-size:8px; }
+    }
+
     /* ── CAMERA CAPTURE BUTTON ── */
     /* Hide the camera-only file input (triggered programmatically) */
     .cam-input-hidden { display:none !important; }
@@ -593,18 +646,18 @@
             <span class="material-symbols-outlined">info</span> El número de teléfono aparecerá aquí cuando subas el reverso de la tarjeta
           </div>
           <!-- Resumen del paciente -->
-          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-            <div style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:10px 14px;text-align:left;">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;">Paciente</div>
-              <div style="font-size:14px;font-weight:700;color:var(--text-primary);" id="scriptName">—</div>
+          <div class="patient-chips-grid">
+            <div class="patient-chip">
+              <div class="patient-chip-label">Paciente</div>
+              <div class="patient-chip-val" id="scriptName">—</div>
             </div>
-            <div style="background:rgba(0, 119, 206,0.08);border:1px solid rgba(0, 119, 206,0.2);border-radius:10px;padding:10px 14px;text-align:left;">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary-light);margin-bottom:4px;">Member ID</div>
-              <div style="font-size:14px;font-weight:700;color:var(--primary-light);font-family:monospace;" id="scriptMid">—</div>
+            <div class="patient-chip patient-chip-blue">
+              <div class="patient-chip-label" style="color:var(--primary-light);">Member ID</div>
+              <div class="patient-chip-val" style="color:var(--primary-light);font-family:monospace;" id="scriptMid">—</div>
             </div>
-            <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;text-align:left;">
-              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--secondary);margin-bottom:4px;">Group #</div>
-              <div style="font-size:14px;font-weight:700;color:var(--secondary);font-family:monospace;" id="scriptGrp">—</div>
+            <div class="patient-chip patient-chip-dark">
+              <div class="patient-chip-label" style="color:var(--secondary);">Group #</div>
+              <div class="patient-chip-val" style="color:var(--secondary);font-family:monospace;" id="scriptGrp">—</div>
             </div>
           </div>
         </div>
