@@ -967,7 +967,7 @@ window.toggleOCRData = function() {
   const icon = document.getElementById("ocrToggleIcon");
   if (sec.style.display === "none") {
     sec.style.display = "block";
-    icon.innerHTML = "Ocultar datos <span class='material-symbols-outlined'>expand_less</span>";
+    icon.innerHTML = "Hide data <span class='material-symbols-outlined'>expand_less</span>";
   } else {
     sec.style.display = "none";
     icon.innerHTML = "Ver datos extraÃ­dos <span class='material-symbols-outlined'>expand_more</span>";
