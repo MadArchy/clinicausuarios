@@ -37,43 +37,25 @@ function updateProgress(step) {
 }
 
 function goToScript() {
-  const banner   = document.getElementById('formErrorBanner');
-  const elNombre = document.getElementById('nombreCompleto');
-  const elFecha  = document.getElementById('fechaNac');
-  const errors   = [];
-
-  [elNombre, elFecha].forEach(el => el && el.classList.remove('input-error'));
-
-  if (!v('nombreCompleto')) { errors.push('Nombre Completo'); elNombre && elNombre.classList.add('input-error'); }
-  if (!v('fechaNac'))       { errors.push('Fecha de Nacimiento'); elFecha  && elFecha.classList.add('input-error'); }
-
-  if (errors.length > 0) {
-    if (banner) {
-      banner.innerHTML = '⚠️ Completa los campos requeridos: <strong>' + errors.join(' &amp; ') + '</strong>';
-      banner.style.display = 'flex';
-      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    const first = !v('nombreCompleto') ? elNombre : elFecha;
-    if (first) setTimeout(() => first.focus(), 350);
-    return;
-  }
-
+  const banner = document.getElementById('formErrorBanner');
   if (banner) banner.style.display = 'none';
 
-  const nm  = v('nombreCompleto') || '—';
+  const nm  = v('f_subscriberName') || v('f_memberName') || '—';
   const mid = v('f_memberId') || v('f_subscriberId') || '—';
   const grp = v('f_groupNum') || '—';
-  document.getElementById('scriptName').textContent        = nm;
-  document.getElementById('scriptMid').textContent         = mid;
-  document.getElementById('scriptGrp').textContent         = grp;
-  document.getElementById('scriptNameInline').textContent  = nm;
-  document.getElementById('scriptMidInline').textContent   = mid;
-  document.getElementById('scriptGrpInline').textContent   = grp;
+  
+  if (document.getElementById('scriptName')) document.getElementById('scriptName').textContent = nm;
+  if (document.getElementById('scriptMid')) document.getElementById('scriptMid').textContent = mid;
+  if (document.getElementById('scriptGrp')) document.getElementById('scriptGrp').textContent = grp;
+  if (document.getElementById('scriptNameInline')) document.getElementById('scriptNameInline').textContent = nm;
+  if (document.getElementById('scriptMidInline')) document.getElementById('scriptMidInline').textContent = mid;
+  if (document.getElementById('scriptGrpInline')) document.getElementById('scriptGrpInline').textContent = grp;
+  
   const phone = v('f_phone');
   if (phone) {
-    document.getElementById('phoneChipWrapper').style.display = 'block';
-    document.getElementById('noPhoneNote').style.display      = 'none';
-    document.getElementById('phoneChip').textContent          = '📞 ' + phone;
+    if (document.getElementById('phoneChipWrapper')) document.getElementById('phoneChipWrapper').style.display = 'block';
+    if (document.getElementById('noPhoneNote')) document.getElementById('noPhoneNote').style.display = 'none';
+    if (document.getElementById('phoneChip')) document.getElementById('phoneChip').innerHTML = '<span class="material-symbols-outlined">call</span> ' + phone;
   }
   showStep(2);
 }
@@ -108,8 +90,8 @@ function handleCard(side, event) {
     cap_el.classList.add("visible");
     document.getElementById(`img${cap(side)}`).src = dataUrl;
 
-    // Mostrar sección extraída
-    document.getElementById("extractedSection").style.display = "block";
+    // Mostrar botón de toggle
+    document.getElementById("ocrToggleSection").style.display = "block";
 
     // OCR
     runOCR(side, dataUrl);
@@ -129,6 +111,7 @@ function removeCard(side) {
   else                  clearBackFields();
   if (!State.files.front && !State.files.back) {
     document.getElementById("extractedSection").style.display = "none";
+    document.getElementById("ocrToggleSection").style.display = "none";
   }
 }
 
@@ -171,7 +154,7 @@ async function runOCR(side, dataUrl) {
     const { data: { text } } = await worker.recognize(dataUrl);
     await worker.terminate();
     fill.style.width  = "100%";
-    label.textContent = "✅ Información extraída correctamente";
+    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Información extraída correctamente";
     // Mostrar texto crudo
     const rawBlock = document.getElementById("ocrRawBlock");
     const rawArea  = document.getElementById("ocrRawText");
@@ -184,7 +167,7 @@ async function runOCR(side, dataUrl) {
     if (side==="front") parseFront(text);
     else                parseBack(text);
   } catch(err) {
-    label.textContent = "⚠️ Error de lectura — completa los datos manualmente";
+    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Error de lectura — completa los datos manualmente";
     console.error("OCR error:", err);
   }
 }
@@ -663,7 +646,7 @@ function parseBack(text) {
   if (phone && State.step === 2) {
     document.getElementById('phoneChipWrapper').style.display = 'block';
     document.getElementById('noPhoneNote').style.display      = 'none';
-    document.getElementById('phoneChip').textContent          = '📞 ' + phone;
+    document.getElementById('phoneChip').innerHTML            = '<span class="material-symbols-outlined">call</span> ' + phone;
   }
 }
 
@@ -718,9 +701,9 @@ async function uploadFile(file, side) {
 function recopilar() {
   return {
     // Paciente
-    nombre:          v("nombreCompleto"),
-    fechaNac:        v("fechaNac"),
-    telefono:        v("telefono"),
+    nombre:          v("f_subscriberName") || v("f_memberName"),
+    fechaNac:        v("f_dob"),
+    telefono:        v("f_phone"),
     // Seguro — Identificación
     aseguradora:     v("f_aseguradora"),
     subscriberName:  v("f_subscriberName"),
@@ -777,7 +760,7 @@ async function submitForm() {
   if (!State.answers.q2) { alert("⚠️ Responde la pregunta 2: ¿Autorización previa?"); return; }
 
   const btn=document.getElementById("btnSubmit");
-  btn.disabled=true; btn.textContent="⏳ Procesando...";
+  btn.disabled=true; btn.innerHTML="<span class='material-symbols-outlined'>hourglass_empty</span> Procesando...";
   const [ss,ok,er]=[
     document.getElementById("statusSending"),
     document.getElementById("statusSuccess"),
@@ -825,7 +808,7 @@ async function submitForm() {
     ss.classList.remove("visible");
     er.classList.add("visible");
     document.getElementById("errorMsg").textContent="Error: "+(err.message||"Intenta de nuevo.");
-    btn.disabled=false; btn.textContent="🚀 Evaluar y Enviar Informe";
+    btn.disabled=false; btn.innerHTML="<span class='material-symbols-outlined'>send</span> Evaluar y Enviar Informe";
   }
 }
 
@@ -845,11 +828,11 @@ function showResultado(resultado, data) {
       <span class="summary-val${accent?" summary-accent":""}">${val||"—"}</span>
     </div>`;
   const chip=(val,good)=>`
-    <span class="chip ${good?"chip-si":"chip-no"}">${good?"✅":"❌"} ${val||"—"}</span>`;
+    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"—"}</span>`;
 
   rc.innerHTML=`
-    <div class="result-icon-wrapper">${esApto?"🎉":"⚠️"}</div>
-    <div class="result-badge">${esApto?"✅ APTO":"❌ NO APTO"}</div>
+    <div class="result-icon-wrapper">${esApto?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
+    <div class="result-badge">${esApto?"<span class='material-symbols-outlined'>check_circle</span> APTO":"<span class='material-symbols-outlined'>cancel</span> NO APTO"}</div>
     <p class="result-message">
       ${esApto
         ?`<strong>${data.nombre}</strong> cumple los criterios de elegibilidad para cirugía bariátrica.`
@@ -935,6 +918,7 @@ function resetAll() {
     document.getElementById(`file${s}`).value="";
   });
   document.getElementById("extractedSection").style.display="none";
+  document.getElementById("ocrToggleSection").style.display="none";
   document.getElementById("progressWrapper").style.display="block";
   document.getElementById("phoneChipWrapper").style.display="none";
   document.getElementById("noPhoneNote").style.display="block";
@@ -947,7 +931,7 @@ function resetAll() {
 // ── CONFETTI ───────────────────────────────────────────────────
 function confetti() {
   const c=document.getElementById("confettiContainer");
-  const cols=["#7c3aed","#10b981","#3b82f6","#f59e0b","#ec4899","#06b6d4"];
+  const cols=["#0077ce","#10b981","#3b82f6","#f59e0b","#ec4899","#06b6d4"];
   for(let i=0;i<80;i++){
     const p=document.createElement("div"); p.className="confetti-piece";
     p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?"50%":"2px"};`;
@@ -960,3 +944,16 @@ document.addEventListener("DOMContentLoaded",()=>{
   updateProgress(1);
   console.log("✅ MedAuth Pro — motor OCR multi-formato cargado");
 });
+
+// ── UI TOGGLER ─────────────────────────────────────────────────
+window.toggleOCRData = function() {
+  const sec = document.getElementById("extractedSection");
+  const icon = document.getElementById("ocrToggleIcon");
+  if (sec.style.display === "none") {
+    sec.style.display = "block";
+    icon.innerHTML = "Ocultar datos <span class='material-symbols-outlined'>expand_less</span>";
+  } else {
+    sec.style.display = "none";
+    icon.innerHTML = "Ver datos extraídos <span class='material-symbols-outlined'>expand_more</span>";
+  }
+};
