@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Colección de pacientes: escritura pública desde el formulario
+    match /pacientes/{pacienteId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+    // Cola de emails: escritura pública, solo el backend puede leer
+    match /emailQueue/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+  }
+}

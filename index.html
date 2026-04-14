@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAuth Pro — Verificación de Seguro Bariátrico</title>
+  <meta name="description" content="Sistema guiado de verificación de beneficios de seguro médico para cirugía bariátrica." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    /* ── TARJETA DOS CARAS ── */
+    .card-sides { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; }
+    @media(max-width:640px){ .card-sides { grid-template-columns:1fr; } }
+
+    /* ── ETIQUETA DE SECCIÓN OCR ── */
+    .ocr-section-label {
+      font-size:11px; font-weight:800; text-transform:uppercase;
+      letter-spacing:.12em; margin-bottom:12px; margin-top:16px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .ocr-section-label::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+    .card-side-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .front-label { color:var(--primary-light); }
+    .back-label  { color:var(--accent); }
+
+    .card-drop {
+      border:2px dashed rgba(255,255,255,0.1); border-radius:var(--radius);
+      padding:24px 16px; text-align:center; cursor:pointer; transition:var(--transition);
+      background:rgba(255,255,255,0.02); position:relative;
+      min-height:160px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:8px;
+    }
+    .card-drop input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .front-drop:hover,.front-drop.dragover { border-color:var(--primary); background:rgba(124,58,237,0.06); }
+    .back-drop:hover,.back-drop.dragover   { border-color:var(--accent);  background:rgba(6,182,212,0.06); }
+    .card-drop-icon  { font-size:32px; }
+    .card-drop-title { font-size:13px; font-weight:600; color:var(--text-primary); }
+    .card-drop-sub   { font-size:11px; color:var(--text-muted); }
+    .card-drop-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:10px; font-weight:600; }
+    .front-badge { background:rgba(124,58,237,0.12); color:var(--primary-light); border:1px solid rgba(124,58,237,0.25); }
+    .back-badge  { background:rgba(6,182,212,0.1);   color:var(--accent);        border:1px solid rgba(6,182,212,0.25); }
+
+    .captured-card { display:none; position:relative; border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--border); background:rgba(0,0,0,0.3); }
+    .captured-card.visible { display:block; }
+    .captured-card img { width:100%; max-height:180px; object-fit:contain; display:block; }
+    .captured-card-actions { position:absolute; top:8px; right:8px; display:flex; gap:6px; }
+    .cap-btn { background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:var(--text-secondary); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; }
+    .cap-btn:hover { color:white; background:rgba(0,0,0,0.9); }
+    .cap-btn.danger { border-color:rgba(239,68,68,0.4); color:var(--no-apto); }
+    .cap-btn.danger:hover { background:rgba(239,68,68,0.15); }
+
+    .ocr-side-panel { margin-top:10px; background:rgba(6,182,212,0.05); border:1px solid rgba(6,182,212,0.18); border-radius:var(--radius-sm); padding:12px 14px; display:none; }
+    .ocr-side-panel.visible { display:block; animation:fadeSlideIn 0.3s ease; }
+    .ocr-side-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .ocr-side-bar  { height:3px; background:rgba(6,182,212,0.15); border-radius:99px; overflow:hidden; }
+    .ocr-side-fill { height:100%; background:var(--accent); transition:width 0.3s ease; width:0%; }
+    .ocr-side-label { font-size:12px; color:var(--accent); font-weight:600; flex:1; }
+
+    /* ── CAMPOS EXTRAÍDOS ── */
+    .extracted-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:640px){ .extracted-fields { grid-template-columns:1fr; } }
+    .extracted-field label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); display:block; margin-bottom:5px; }
+    .extracted-field input, .extracted-field textarea {
+      width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--radius-sm); padding:9px 13px; font-size:13px; color:var(--text-primary);
+      font-family:'Inter',sans-serif; outline:none; transition:var(--transition); box-sizing:border-box;
+    }
+    .extracted-field input:focus { border-color:var(--primary); background:rgba(124,58,237,0.05); }
+    .extracted-field input.detected { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+    .extracted-field input.phone-detected { border-color:rgba(6,182,212,0.5); background:rgba(6,182,212,0.06); }
+    .field-span-2 { grid-column:span 2; }
+    @media(max-width:640px){ .field-span-2 { grid-column:span 1; } }
+
+    /* ── SCRIPT DE LLAMADA ── */
+    .call-card { background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(59,130,246,0.06)); border:1px solid rgba(124,58,237,0.25); border-radius:var(--radius-lg); padding:32px 36px; position:relative; overflow:hidden; }
+    .call-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent)); }
+    .call-top { text-align:center; margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.07); }
+    .call-phone-emoji { font-size:40px; margin-bottom:12px; display:block; animation:ring 2.5s ease-in-out infinite; }
+    @keyframes ring { 0%,100%{transform:rotate(0)} 8%{transform:rotate(-15deg)} 16%{transform:rotate(15deg)} 24%{transform:rotate(-10deg)} 32%{transform:rotate(10deg)} 40%{transform:rotate(0)} }
+    .call-main-title { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--text-primary); margin:0 0 8px; }
+    .call-main-sub { font-size:14px; color:var(--text-secondary); line-height:1.6; margin:0; }
+    .call-phone-chip { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:10px 22px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:99px; font-size:15px; font-weight:700; font-family:'Space Grotesk',monospace; color:var(--apto); letter-spacing:.03em; }
+    .call-section { margin-bottom:24px; }
+    .call-section-tag { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--text-muted); margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+    .call-section-tag::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+    .opening-script { border-left:4px solid var(--primary); background:rgba(124,58,237,0.07); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; }
+    .opening-script p { font-size:15px; color:var(--text-primary); line-height:1.7; margin:0 0 10px; font-style:italic; }
+    .opening-script p:last-child { margin:0; }
+    .opening-script strong { font-style:normal; color:var(--primary-light); }
+    .opening-script small { font-size:12px; color:var(--text-muted); font-style:normal; display:block; margin-top:8px; }
+    .cpt-block { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.18); border-radius:var(--radius); overflow:hidden; }
+    .cpt-item { display:flex; align-items:center; gap:16px; padding:12px 20px; border-bottom:1px solid rgba(59,130,246,0.1); transition:var(--transition); }
+    .cpt-item:last-child { border-bottom:none; }
+    .cpt-item:hover { background:rgba(59,130,246,0.05); }
+    .cpt-code { font-family:'Space Grotesk',monospace; font-size:14px; font-weight:700; color:var(--secondary); min-width:75px; padding:4px 10px; background:rgba(59,130,246,0.12); border-radius:6px; text-align:center; }
+    .cpt-name { font-size:14px; color:var(--text-primary); font-weight:500; }
+    .q-list { display:flex; flex-direction:column; gap:0; }
+    .q-item { display:grid; grid-template-columns:36px 1fr; gap:0 14px; padding:18px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items:start; }
+    .q-item:last-child { border-bottom:none; }
+    .q-num { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; margin-top:2px; }
+    .q-en { font-size:15px; color:var(--text-primary); font-weight:600; line-height:1.4; margin-bottom:2px; font-style:italic; }
+    .q-en strong { font-style:normal; }
+    .q-es { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
+    .q-answers { display:flex; flex-wrap:wrap; gap:8px; }
+    .ans-btn { padding:7px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; }
+    .ans-btn:hover { border-color:rgba(124,58,237,0.5); color:var(--text-primary); background:rgba(124,58,237,0.07); }
+    .ans-btn.sel-yes { border-color:var(--apto);    background:rgba(16,185,129,0.12); color:var(--apto);   font-weight:700; }
+    .ans-btn.sel-no  { border-color:var(--no-apto); background:rgba(239,68,68,0.1);   color:var(--no-apto); font-weight:700; }
+    .ans-btn.sel-nr  { border-color:var(--accent);  background:rgba(6,182,212,0.1);   color:var(--accent); font-weight:700; }
+    .q-input-field { width:100%; max-width:420px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:8px; padding:9px 13px; font-size:13px; color:var(--text-primary); font-family:'Inter',sans-serif; outline:none; transition:var(--transition); margin-top:8px; box-sizing:border-box; }
+    .q-input-field:focus { border-color:var(--accent); background:rgba(6,182,212,0.05); }
+    textarea.q-input-field { resize:vertical; min-height:80px; max-width:100%; }
+    .fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+    @media(max-width:480px){ .fin-grid { grid-template-columns:1fr; } }
+    .fin-item label { font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.08em; display:block; margin-bottom:5px; }
+    .hang-up-box { display:flex; align-items:flex-start; gap:14px; padding:18px 20px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius); margin-top:8px; }
+    .hang-up-icon { font-size:24px; flex-shrink:0; }
+    .hang-up-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:#fbbf24; margin-bottom:4px; }
+    .hang-up-list { font-size:13px; color:#fcd34d; line-height:1.6; }
+    .hang-up-dots { color:#f59e0b; margin:0 4px; }
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+    @media(max-width:640px){ .rep-grid { grid-template-columns:1fr; } }
+  
+    /* ── Inline validation ── */
+    .input-error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.25) !important;
+      animation: shake 0.35s ease;
+    }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)}
+      80%{transform:translateX(4px)}
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ══ HEADER ══ -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="logo-text">MedAuth Pro</div>
+        <div class="logo-sub">Bariatric Surgery Insurance Verification</div>
+      </div>
+    </div>
+    <div class="header-badge">Sistema Activo</div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- PROGRESS -->
+    <div class="progress-wrapper" id="progressWrapper">
+      <div class="progress-info">
+        <span class="progress-label" id="progressLabel">Paso 1 de 3</span>
+        <span class="progress-count" id="progressCount">Datos del Paciente y Tarjeta del Seguro</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:33%"></div>
+      </div>
+      <div class="steps-dots">
+        <div class="step-dot active" id="dot-1">
+          <div class="step-dot-circle">1</div>
+          <span class="step-dot-label">Paciente &amp; Tarjeta</span>
+        </div>
+        <div class="step-dot" id="dot-2">
+          <div class="step-dot-circle">📞</div>
+          <span class="step-dot-label">Script de Llamada</span>
+        </div>
+        <div class="step-dot" id="dot-3">
+          <div class="step-dot-circle">3</div>
+          <span class="step-dot-label">Resultado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════
+         PASO 1 — DATOS DEL PACIENTE + TARJETA
+    ═════════════════════════════════════════════════════ -->
+    <div class="form-section active" id="step-1">
+      <div class="section-card">
+
+        <!-- Datos del paciente -->
+        <div class="section-header">
+          <div class="section-icon">🧑‍⚕️</div>
+          <div>
+            <h1 class="section-title">Datos del Paciente</h1>
+            <p class="section-subtitle">Información personal básica del paciente</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label class="form-label" for="nombreCompleto">Nombre Completo <span class="required">*</span></label>
+            <input class="form-input" type="text" id="nombreCompleto" placeholder="Ej. María Elena Rodríguez González" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fechaNac">Fecha de Nacimiento <span class="required">*</span></label>
+            <input class="form-input" type="date" id="fechaNac" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="telefono">Teléfono del Paciente</label>
+            <input class="form-input" type="tel" id="telefono" placeholder="(555) 000-0000" />
+          </div>
+        </div>
+
+        <hr class="form-divider" />
+
+        <!-- Tarjeta del seguro -->
+        <div class="section-header" style="margin-bottom:6px;">
+          <div class="section-icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);">💳</div>
+          <div>
+            <div class="section-title" style="font-size:18px;">Tarjeta del Seguro</div>
+            <p class="section-subtitle">
+              Sube el <strong>frente</strong> (Member ID, Group) y el <strong>reverso</strong> (teléfonos de Member Services)
+            </p>
+          </div>
+        </div>
+
+        <div class="info-callout" style="margin-bottom:16px;">
+          <span class="info-callout-icon">🤖</span>
+          <span>El OCR lee <strong>todo el texto</strong> de la imagen. Verás el texto crudo extraído + todos los campos organizados para corregir si es necesario.</span>
+        </div>
+
+        <!-- DOS ZONAS DE CARGA -->
+        <div class="card-sides">
+
+          <!-- FRENTE -->
+          <div>
+            <div class="card-side-label front-label">🪪 Frente de la Tarjeta</div>
+            <div class="card-drop front-drop" id="dropFront" style="display:flex;">
+              <input type="file" id="fileFront" accept="image/*" onchange="handleCard('front', event)" />
+              <span class="card-drop-icon">🖼️</span>
+              <span class="card-drop-title">Foto del frente</span>
+              <span class="card-drop-sub">Member ID · Group # · Plan · Copays</span>
+              <span class="card-drop-badge front-badge">🤖 OCR completo</span>
+            </div>
+            <div class="captured-card" id="capFront">
+              <img id="imgFront" src="" alt="Frente de la tarjeta" />
+              <div class="captured-card-actions">
+                <button class="cap-btn danger" onclick="removeCard('front')">✕ Quitar</button>
+              </div>
+            </div>
+            <div class="ocr-side-panel" id="ocrFrontPanel">
+              <div class="ocr-side-header">
+                <div class="ocr-spinner"></div>
+                <span class="ocr-side-label" id="ocrFrontLabel">Leyendo frente...</span>
+              </div>
+              <div class="ocr-side-bar"><div class="ocr-side-fill" id="ocrFrontFill"></div></div>
+            </div>
+          </div>
+
+          <!-- REVERSO -->
+          <div>
+            <div class="card-side-label back-label">🔄 Reverso de la Tarjeta</div>
+            <div class="card-drop back-drop" id="dropBack" style="display:flex;">
+              <input type="file" id="fileBack" accept="image/*" onchange="handleCard('back', event)" />
+              <span class="card-drop-icon">📋</span>
+              <span class="card-drop-title">Foto del reverso</span>
+              <span class="card-drop-sub">Tel. Member Services · Authorization · Website</span>
+              <span class="card-drop-badge back-badge">📞 Extrae teléfonos</span>
+            </div>
+            <div class="captured-card" id="capBack">
+              <img id="imgBack" src="" alt="Reverso de la tarjeta" />
+              <div class="captured-card-actions">
+                <button class="cap-btn danger" onclick="removeCard('back')">✕ Quitar</button>
+              </div>
+            </div>
+            <div class="ocr-side-panel" id="ocrBackPanel">
+              <div class="ocr-side-header">
+                <div class="ocr-spinner"></div>
+                <span class="ocr-side-label" id="ocrBackLabel">Leyendo reverso...</span>
+              </div>
+              <div class="ocr-side-bar"><div class="ocr-side-fill" id="ocrBackFill"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             DATOS EXTRAÍDOS — aparece al subir imagen
+        ══════════════════════════════════════════════════ -->
+        <div id="extractedSection" style="display:none; margin-top:24px;">
+          <hr class="form-divider" />
+
+          <!-- TEXTO CRUDO OCR -->
+          <div id="ocrRawBlock" style="display:none; margin-bottom:4px;">
+            <div class="ocr-section-label" style="color:#f59e0b;">🔍 Texto completo leído por OCR</div>
+            <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.18);border-radius:10px;padding:14px;">
+              <textarea id="ocrRawText" readonly rows="7"
+                style="width:100%;background:transparent;border:none;outline:none;resize:vertical;
+                       font-family:monospace;font-size:12px;color:#fcd34d;line-height:1.7;box-sizing:border-box;">
+              </textarea>
+              <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:6px;">
+                ☝️ Este es <strong>TODO</strong> el texto leído de la imagen. Los campos abajo se llenaron desde aquí.
+                Si ves datos no capturados, escríbelos manualmente.
+              </small>
+            </div>
+          </div>
+
+          <!-- 1. IDENTIFICACIÓN -->
+          <div class="ocr-section-label" style="color:var(--primary-light);">🪪 Identificación del Seguro</div>
+          <div class="extracted-fields">
+            <div class="extracted-field field-span-2">
+              <label>Nombre de la Aseguradora</label>
+              <input type="text" id="f_aseguradora" placeholder="Ambetter · Blue Cross BlueShield · Amerigroup · Molina · Christus..." />
+            </div>
+            <div class="extracted-field">
+              <label>Subscriber Name (titular de la póliza)</label>
+              <input type="text" id="f_subscriberName" placeholder="Nombre del suscriptor" />
+            </div>
+            <div class="extracted-field">
+              <label>Member Name (nombre del miembro)</label>
+              <input type="text" id="f_memberName" placeholder="Nombre del paciente en la tarjeta" />
+            </div>
+            <div class="extracted-field">
+              <label>Member ID / ID # ★</label>
+              <input type="text" id="f_memberId" placeholder="Número de miembro (más importante)" />
+            </div>
+            <div class="extracted-field">
+              <label>Subscriber ID / Subscriber #</label>
+              <input type="text" id="f_subscriberId" placeholder="Número de suscriptor" />
+            </div>
+            <div class="extracted-field">
+              <label>Group Number / Group No. ★</label>
+              <input type="text" id="f_groupNum" placeholder="Número de grupo" />
+            </div>
+            <div class="extracted-field field-span-2">
+              <label>Plan Name — nombre completo del plan</label>
+              <input type="text" id="f_planName" placeholder="Ej. Ambetter Balanced Care 1 + Vision + Adult Dental" />
+            </div>
+            <div class="extracted-field">
+              <label>Plan Type</label>
+              <input type="text" id="f_planType" placeholder="PPO / HMO / CHIP / EPO / HDHP..." />
+            </div>
+            <div class="extracted-field">
+              <label>Benefit Plan Code</label>
+              <input type="text" id="f_benefitPlan" placeholder="Ej. HIOPT" />
+            </div>
+            <div class="extracted-field">
+              <label>Effective Date (fecha de vigencia)</label>
+              <input type="text" id="f_effectiveDate" placeholder="MM/DD/YYYY" />
+            </div>
+            <div class="extracted-field">
+              <label>Date of Birth / DOB</label>
+              <input type="text" id="f_dob" placeholder="Fecha de nacimiento del titular" />
+            </div>
+            <div class="extracted-field">
+              <label>Network</label>
+              <input type="text" id="f_network" placeholder="In Network Only / Out of Network..." />
+            </div>
+            <div class="extracted-field">
+              <label>Type of Coverage</label>
+              <input type="text" id="f_coverage" placeholder="CHIP / Individual / Family / TX-EX..." />
+            </div>
+            <div class="extracted-field field-span-2">
+              <label>Dependents (miembros adicionales en la póliza)</label>
+              <input type="text" id="f_dependents" placeholder="Ej. Dependent One · Dependent Two · Member 1, Member 2, Member 3..." />
+            </div>
+          </div>
+
+          <hr class="form-divider" style="margin:14px 0;" />
+
+          <!-- 2. COPAGOS -->
+          <div class="ocr-section-label" style="color:var(--accent);">💊 Medical Plan Co-Pay / Copagos</div>
+          <div class="extracted-fields">
+            <div class="extracted-field">
+              <label>PCP / Primary Care Office Visit</label>
+              <input type="text" id="f_copayPCP" placeholder="Ej. $20" />
+            </div>
+            <div class="extracted-field">
+              <label>Specialist / Specialist Office Visit</label>
+              <input type="text" id="f_copaySpec" placeholder="Ej. $40" />
+            </div>
+            <div class="extracted-field">
+              <label>Emergency Room (ER)</label>
+              <input type="text" id="f_copayER" placeholder="Ej. $150" />
+            </div>
+            <div class="extracted-field">
+              <label>Urgent Care</label>
+              <input type="text" id="f_copayUrgent" placeholder="Ej. $50" />
+            </div>
+            <div class="extracted-field">
+              <label>Deductible (Med/Rx)</label>
+              <input type="text" id="f_deductible" placeholder="Ej. $2,000" />
+            </div>
+            <div class="extracted-field">
+              <label>Coinsurance (Med/Rx)</label>
+              <input type="text" id="f_coinsurance" placeholder="Ej. 20%" />
+            </div>
+          </div>
+
+          <hr class="form-divider" style="margin:14px 0;" />
+
+          <!-- 3. FARMACIA -->
+          <div class="ocr-section-label" style="color:var(--secondary);">💊 Pharmacy Plan / Prescription Drugs</div>
+          <div class="extracted-fields">
+            <div class="extracted-field">
+              <label>RxBIN / Rx BIN#</label>
+              <input type="text" id="f_rxBin" placeholder="Ej. 610097 / 008019" />
+            </div>
+            <div class="extracted-field">
+              <label>RxPCN / Rx PCN</label>
+              <input type="text" id="f_rxPcn" placeholder="Ej. MEDDADV" />
+            </div>
+            <div class="extracted-field">
+              <label>RxGRP / Rx Group</label>
+              <input type="text" id="f_rxGrp" placeholder="Ej. RX1234" />
+            </div>
+            <div class="extracted-field">
+              <label>Pharmacy Administrator</label>
+              <input type="text" id="f_rxAdmin" placeholder="Ej. Express Scripts" />
+            </div>
+            <div class="extracted-field">
+              <label>Generic Drugs copay</label>
+              <input type="text" id="f_rxGeneric" placeholder="Ej. $5" />
+            </div>
+            <div class="extracted-field">
+              <label>Preferred Brand Drugs copay</label>
+              <input type="text" id="f_rxBrand" placeholder="Ej. $40" />
+            </div>
+            <div class="extracted-field">
+              <label>Non-Preferred Brand Drugs copay</label>
+              <input type="text" id="f_rxNonPref" placeholder="Ej. $75" />
+            </div>
+            <div class="extracted-field">
+              <label>Specialty Drugs copay</label>
+              <input type="text" id="f_rxSpecialty" placeholder="Specialty Drugs" />
+            </div>
+          </div>
+
+          <hr class="form-divider" style="margin:14px 0;" />
+
+          <!-- 4. PCP / PROVIDER -->
+          <div class="ocr-section-label" style="color:var(--text-secondary);">🩺 PCP &amp; Provider</div>
+          <div class="extracted-fields">
+            <div class="extracted-field">
+              <label>PCP Name</label>
+              <input type="text" id="f_pcpName" placeholder="Nombre del médico de cabecera" />
+            </div>
+            <div class="extracted-field">
+              <label>PCP Phone</label>
+              <input type="text" id="f_pcpPhone" placeholder="Teléfono del PCP" />
+            </div>
+            <div class="extracted-field">
+              <label>PCP Effective Date</label>
+              <input type="text" id="f_pcpEffDate" placeholder="Fecha de inicio con el PCP" />
+            </div>
+            <div class="extracted-field">
+              <label>Provider Group</label>
+              <input type="text" id="f_providerGroup" placeholder="Provider Group del médico" />
+            </div>
+            <div class="extracted-field">
+              <label>Provider Phone</label>
+              <input type="text" id="f_providerPhone" placeholder="Tel. del proveedor" />
+            </div>
+            <div class="extracted-field">
+              <label>CHIP Perinate Number</label>
+              <input type="text" id="f_chipNum" placeholder="Solo tarjetas Amerigroup/CHIP" />
+            </div>
+          </div>
+
+          <hr class="form-divider" style="margin:14px 0;" />
+
+          <!-- 5. TELÉFONOS DEL REVERSO -->
+          <div class="ocr-section-label" style="color:var(--accent);">📞 Teléfonos del Reverso de la Tarjeta</div>
+          <div class="extracted-fields">
+            <div class="extracted-field field-span-2" style="background:rgba(6,182,212,0.04);border:1px solid rgba(6,182,212,0.25);border-radius:10px;padding:12px;">
+              <label style="color:var(--accent);">📞 Member Services ★ — número principal para llamar</label>
+              <input type="tel" id="f_phone" placeholder="Número de Member Services del reverso" />
+              <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:5px;">Este número aparecerá en el Script de Llamada del Paso 2</small>
+            </div>
+            <div class="extracted-field">
+              <label>Tel. Prior Authorization / Pre-Auth</label>
+              <input type="text" id="f_phoneAuth" placeholder="Número para autorizaciones previas" />
+            </div>
+            <div class="extracted-field">
+              <label>Tel. Pharmacy / Farmacia</label>
+              <input type="text" id="f_phonePharmacy" placeholder="Número de farmacia" />
+            </div>
+            <div class="extracted-field">
+              <label>24-Hour Nurse HelpLine</label>
+              <input type="text" id="f_phoneNurse" placeholder="Línea de enfermera 24h" />
+            </div>
+            <div class="extracted-field">
+              <label>Behavioral Health Phone</label>
+              <input type="text" id="f_phoneBehavioral" placeholder="Salud mental / behavioral health" />
+            </div>
+            <div class="extracted-field field-span-2">
+              <label>Sitio Web del Seguro</label>
+              <input type="text" id="f_websiteBack" placeholder="www.aseguradora.com" />
+            </div>
+          </div>
+
+          <hr class="form-divider" style="margin:14px 0;" />
+
+          <!-- 6. CAMPO LIBRE -->
+          <div class="ocr-section-label" style="color:#f59e0b;">📝 Datos Adicionales de la Tarjeta</div>
+          <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;padding:14px;">
+            <label style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:8px;">
+              Escribe aquí cualquier información visible en la tarjeta que no haya sido capturada automáticamente
+            </label>
+            <textarea id="f_extraInfo" rows="4"
+              style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text-primary);font-family:'Inter',sans-serif;outline:none;resize:vertical;box-sizing:border-box;"
+              placeholder="Ej: Out-of-pocket máximo $8,000 · Deducible familiar $4,000 · TDI Texas · QHF/HMO · Nurse HelpLine 1-800-xxx-xxxx..."></textarea>
+          </div>
+        </div>
+
+        <!-- Error banner inline -->
+        <div id="formErrorBanner" style="display:none;align-items:center;gap:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:10px;padding:12px 18px;color:#fca5a5;font-size:14px;margin-bottom:14px;">
+          ⚠️ Completa los campos requeridos
+        </div>
+
+        <div class="nav-buttons">
+          <span></span>
+          <button class="btn btn-primary" onclick="goToScript()">
+            Continuar al Script de Llamada 📞
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════
+         PASO 2 — SCRIPT DE LLAMADA
+    ═════════════════════════════════════════════════════ -->
+    <div class="form-section" id="step-2">
+      <div class="section-card call-card">
+
+        <!-- CABECERA -->
+        <div class="call-top">
+          <span class="call-phone-emoji">📞</span>
+          <h2 class="call-main-title">Call your insurance company</h2>
+          <p class="call-main-sub">
+            Flip your insurance card over and call the <strong style="color:var(--accent)">Member Services</strong> number.<br/>
+            Then follow this script.
+          </p>
+          <div id="phoneChipWrapper" style="display:none;">
+            <div class="call-phone-chip" id="phoneChip">📞 —</div>
+          </div>
+          <div id="noPhoneNote" style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+            ☝️ El número de teléfono aparecerá aquí cuando subas el reverso de la tarjeta
+          </div>
+          <!-- Resumen del paciente -->
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;text-align:left;">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;">Paciente</div>
+              <div style="font-size:14px;font-weight:700;color:var(--text-primary);" id="scriptName">—</div>
+            </div>
+            <div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:10px 14px;text-align:left;">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary-light);margin-bottom:4px;">Member ID</div>
+              <div style="font-size:14px;font-weight:700;color:var(--primary-light);font-family:monospace;" id="scriptMid">—</div>
+            </div>
+            <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 14px;text-align:left;">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--secondary);margin-bottom:4px;">Group #</div>
+              <div style="font-size:14px;font-weight:700;color:var(--secondary);font-family:monospace;" id="scriptGrp">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WHEN THEY ANSWER -->
+        <div class="call-section">
+          <div class="call-section-tag">WHEN THEY ANSWER — SAY THIS</div>
+          <div class="opening-script">
+            <p>
+              "Hi, I'd like to verify my benefits for <strong>bariatric surgery</strong>.
+              Can you please check if it's covered under my plan?"
+            </p>
+            <p>
+              "My name is <strong id="scriptNameInline">—</strong>,
+              my Member ID is <strong id="scriptMidInline">—</strong>
+              and my Group Number is <strong id="scriptGrpInline">—</strong>."
+            </p>
+            <small>🗣️ Habla claro, despacio — el representante tomará nota</small>
+          </div>
+        </div>
+
+        <!-- CPT CODES -->
+        <div class="call-section">
+          <div class="call-section-tag">IF THEY ASK FOR PROCEDURE CODES — GIVE THEM THESE</div>
+          <div class="cpt-block">
+            <div class="cpt-item">
+              <span class="cpt-code">43775</span>
+              <span class="cpt-name">Sleeve Gastrectomy (manga gástrica)</span>
+            </div>
+            <div class="cpt-item">
+              <span class="cpt-code">43644</span>
+              <span class="cpt-name">Gastric Bypass — Roux-en-Y</span>
+            </div>
+            <div class="cpt-item">
+              <span class="cpt-code">43770</span>
+              <span class="cpt-name">Gastric Band (banda gástrica)</span>
+            </div>
+            <div class="cpt-item">
+              <span class="cpt-code">E66.01</span>
+              <span class="cpt-name">Morbid obesity due to excess calories (ICD-10)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 PREGUNTAS -->
+        <div class="call-section">
+          <div class="call-section-tag">THEN ASK THESE 6 QUESTIONS</div>
+          <div class="q-list">
+
+            <!-- Q1 -->
+            <div class="q-item">
+              <div class="q-num">1</div>
+              <div class="q-content">
+                <div class="q-en">"Is <strong>bariatric surgery</strong> covered under my plan?"</div>
+                <div class="q-es">¿La cirugía bariátrica está cubierta bajo mi plan?</div>
+                <div class="q-answers">
+                  <button class="ans-btn" id="q1si"  onclick="setAnswer('q1','Si','sel-yes',this)">✅ Sí, cubierta</button>
+                  <button class="ans-btn" id="q1par" onclick="setAnswer('q1','Parcial','sel-nr',this)">⚡ Parcialmente</button>
+                  <button class="ans-btn" id="q1no"  onclick="setAnswer('q1','No','sel-no',this)">❌ No cubierta</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="q-item">
+              <div class="q-num">2</div>
+              <div class="q-content">
+                <div class="q-en">"Do I need a <strong>prior authorization</strong>? If so, has it been obtained?"</div>
+                <div class="q-es">¿Necesito autorización previa? ¿Ya fue obtenida?</div>
+                <div class="q-answers">
+                  <button class="ans-btn" onclick="setAnswer('q2','No Requerida','sel-yes',this)">✅ No requerida</button>
+                  <button class="ans-btn" onclick="setAnswer('q2','Obtenida','sel-yes',this)">✅ Sí, obtenida</button>
+                  <button class="ans-btn" onclick="setAnswer('q2','Requerida — Pendiente','sel-no',this)">⏳ Requerida / Pendiente</button>
+                  <button class="ans-btn" onclick="setAnswer('q2','Denegada','sel-no',this)">❌ Denegada</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="q-item">
+              <div class="q-num">3</div>
+              <div class="q-content">
+                <div class="q-en">"Do I need a <strong>referral from my PCP</strong>?"</div>
+                <div class="q-es">¿Necesito referido de mi médico de cabecera?</div>
+                <div class="q-answers">
+                  <button class="ans-btn" onclick="setAnswer('q3','No Requerido','sel-yes',this)">✅ No requerido</button>
+                  <button class="ans-btn" onclick="setAnswer('q3','Requerido','sel-no',this)">⚠️ Requerido</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="q-item">
+              <div class="q-num">4</div>
+              <div class="q-content">
+                <div class="q-en">"Does the surgery have to be done at a <strong>specific hospital or facility</strong>?"</div>
+                <div class="q-es">¿La cirugía debe hacerse en un hospital específico?</div>
+                <div class="q-answers">
+                  <button class="ans-btn" onclick="setAnswer('q4','Sí, específico','sel-no',this)">🏥 Sí, específico</button>
+                  <button class="ans-btn" onclick="setAnswer('q4','Puedo elegir','sel-yes',this)">✅ Puedo elegir</button>
+                </div>
+                <input class="q-input-field" type="text" id="q4detail" placeholder="Si es específico — ¿cuál hospital o facilidad?" />
+              </div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="q-item">
+              <div class="q-num">5</div>
+              <div class="q-content">
+                <div class="q-en">"What is my <strong>deductible</strong> and how much have I met?"</div>
+                <div class="q-es">¿Cuál es mi deducible y cuánto he cumplido?</div>
+                <div class="fin-grid">
+                  <div class="fin-item">
+                    <label>Deducible Total</label>
+                    <input class="q-input-field" type="text" id="q5ded" placeholder="Ej. $5,000" style="margin-top:0;" />
+                  </div>
+                  <div class="fin-item">
+                    <label>Cumplido Hasta Ahora</label>
+                    <input class="q-input-field" type="text" id="q5met" placeholder="Ej. $2,300" style="margin-top:0;" />
+                  </div>
+                  <div class="fin-item">
+                    <label>Copago / Coseguro</label>
+                    <input class="q-input-field" type="text" id="q5copago" placeholder="Ej. 20% / $50" style="margin-top:0;" />
+                  </div>
+                  <div class="fin-item">
+                    <label>Out-of-Pocket Máximo</label>
+                    <input class="q-input-field" type="text" id="q5oop" placeholder="Ej. $8,000" style="margin-top:0;" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="q-item">
+              <div class="q-num">6</div>
+              <div class="q-content">
+                <div class="q-en">"Is there <strong>anything else</strong> I need to do to get this approved?"</div>
+                <div class="q-es">¿Hay algo más que deba hacer para que sea aprobado?</div>
+                <textarea class="q-input-field" id="q6notes" rows="3"
+                  placeholder="Anota aquí todo lo que el representante te diga..."></textarea>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BEFORE YOU HANG UP -->
+        <div class="call-section">
+          <div class="call-section-tag">BEFORE YOU HANG UP — WRITE DOWN</div>
+          <div class="hang-up-box">
+            <div class="hang-up-icon">📝</div>
+            <div>
+              <div class="hang-up-title">Antes de colgar — anota esto:</div>
+              <div class="hang-up-list">
+                Rep's name <span class="hang-up-dots">·</span>
+                Reference # <span class="hang-up-dots">·</span>
+                Everything they told you
+              </div>
+              <div class="hang-up-sub">Estos datos son la evidencia de la verificación</div>
+            </div>
+          </div>
+          <div class="rep-grid">
+            <div>
+              <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:6px;">Nombre del Representante</label>
+              <input class="q-input-field" type="text" id="repName" placeholder="Nombre del agente de seguro" style="margin-top:0;max-width:100%;" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:6px;">Número de Referencia de la Llamada</label>
+              <input class="q-input-field" type="text" id="refNum" placeholder="Reference # confirmación" style="margin-top:0;max-width:100%;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- STATUS / SEND -->
+        <div id="statusSending" style="display:none;text-align:center;padding:18px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:12px;margin-bottom:14px;">
+          <div class="ocr-spinner" style="margin:0 auto 10px;"></div>
+          <span style="font-size:14px;color:var(--primary-light);">Procesando...</span>
+        </div>
+        <div id="statusSuccess" style="display:none;text-align:center;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:14px;">
+          <p style="font-size:14px;color:var(--apto);margin:0;">✅ ¡Informe enviado! Calculando resultado...</p>
+        </div>
+        <div id="statusError" style="display:none;padding:16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;margin-bottom:14px;">
+          <p style="font-size:13px;color:var(--no-apto);margin:0;" id="errorMsg">Error enviando el correo.</p>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-secondary" onclick="prevStep(2)">← Atrás</button>
+          <button class="btn btn-primary" id="btnSubmit" onclick="submitForm()">
+            🚀 Evaluar y Enviar Informe
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════
+         PASO 3 — RESULTADO
+    ═════════════════════════════════════════════════════ -->
+    <div class="form-section" id="step-3">
+      <div id="resultCard" class="section-card"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CONFETTI -->
+<div id="confettiContainer" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;"></div>
+<style>
+  .confetti-piece {
+    position:absolute;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform:translateY(-10px) rotate(0deg); opacity:1; }
+    100% { transform:translateY(110vh) rotate(720deg); opacity:0; }
+  }
+</style>
+
+<!-- FIREBASE CONFIG -->
+<script>
+  firebase.initializeApp({
+    apiKey:            "AIzaSyBW6XeVbKqHc9t4I_eTjXFDZ5M8JiMp0Oo",
+    authDomain:        "datosdelpaciente-8e3ba.firebaseapp.com",
+    projectId:         "datosdelpaciente-8e3ba",
+    storageBucket:     "datosdelpaciente-8e3ba.appspot.com",
+    messagingSenderId: "488006843812",
+    appId:             "1:488006843812:web:placeholder"
+  });
+</script>
+
+<script src="js/app.js"></script>
+</body>
+</html>

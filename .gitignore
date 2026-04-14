@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+.env
+.env.local
+functions/node_modules/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporales
+*.tmp
+*.bak
+fix_parsers.js
+addBanner.js
+patchGoToScript.js
+verify.js
+audit.js

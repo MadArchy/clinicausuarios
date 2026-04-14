@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /seguros/{allPaths=**} {
+      allow write: if true;  // permite subir archivos desde el formulario
+      allow read: if true;   // permite ver los archivos subidos
+    }
+  }
+}
