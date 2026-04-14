@@ -156,6 +156,136 @@
       .hang-up-list { font-size:12px; line-height:1.7; }
     }
   
+    /* ── HANG-UP REDESIGN ── */
+    .hangup-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.08));
+      border: 2px solid rgba(239,68,68,0.4);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hangup-alert::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #ef4444);
+      background-size: 200%;
+      animation: shimmer-red 2s linear infinite;
+    }
+    @keyframes shimmer-red {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    .hangup-alert-icon {
+      font-size: 32px;
+      color: #ef4444;
+      flex-shrink: 0;
+      animation: pulse-dot 1.2s ease-in-out infinite;
+    }
+    .hangup-alert-title {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #ef4444;
+      margin-bottom: 5px;
+    }
+    .hangup-alert-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .hangup-alert-sub strong { color: #ef4444; }
+
+    .hangup-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .hangup-check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 16px;
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 10px;
+    }
+    .hangup-check-num {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: white;
+    }
+    .hangup-check-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .hangup-check-text strong {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    .hangup-check-text span {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .hangup-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media(max-width:600px){ .hangup-inputs { grid-template-columns: 1fr; } }
+
+    .hangup-input-group { display: flex; flex-direction: column; gap: 8px; }
+    .hangup-input-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-secondary);
+    }
+    .hangup-required {
+      font-size: 9px;
+      padding: 2px 7px;
+      background: rgba(239,68,68,0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 99px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      margin-left: 4px;
+    }
+    .hangup-field {
+      border-color: rgba(245,158,11,0.35) !important;
+      background: rgba(245,158,11,0.04) !important;
+    }
+    .hangup-field:focus {
+      border-color: #f59e0b !important;
+      background: rgba(245,158,11,0.08) !important;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15) !important;
+    }
+
     /* ── PATIENT CHIPS ── */
     .patient-chips-grid {
       margin-top:16px; display:grid;
@@ -767,26 +897,56 @@
         <!-- BEFORE YOU HANG UP -->
         <div class="call-section">
           <div class="call-section-tag">BEFORE YOU HANG UP — WRITE DOWN</div>
-          <div class="hang-up-box">
-            <div class="hang-up-icon"><span class="material-symbols-outlined">edit_note</span></div>
-            <div>
-              <div class="hang-up-title">Antes de colgar — anota esto:</div>
-              <div class="hang-up-list">
-                Rep's name <span class="hang-up-dots">·</span>
-                Reference # <span class="hang-up-dots">·</span>
-                Everything they told you
-              </div>
-              <div class="hang-up-sub">Estos datos son la evidencia de la verificación</div>
+
+          <!-- Alert banner -->
+          <div class="hangup-alert">
+            <div class="hangup-alert-icon"><span class="material-symbols-outlined">notifications_active</span></div>
+            <div class="hangup-alert-body">
+              <div class="hangup-alert-title">¡NO CUELGUES AÚN — ANOTA ESTO AHORA!</div>
+              <div class="hangup-alert-sub">Esta información es <strong>evidencia legal</strong> de la verificación. Sin ella, el proceso puede ser inválido.</div>
             </div>
           </div>
-          <div class="rep-grid">
-            <div>
-              <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:6px;">Nombre del Representante</label>
-              <input class="q-input-field" type="text" id="repName" placeholder="Nombre del agente de seguro" style="margin-top:0;max-width:100%;" />
+
+          <!-- Checklist -->
+          <div class="hangup-checklist">
+            <div class="hangup-check-item">
+              <div class="hangup-check-num">1</div>
+              <div class="hangup-check-text">
+                <strong>Rep's full name</strong>
+                <span>Nombre completo del representante que atendió</span>
+              </div>
             </div>
-            <div>
-              <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);display:block;margin-bottom:6px;">Número de Referencia de la Llamada</label>
-              <input class="q-input-field" type="text" id="refNum" placeholder="Reference # confirmación" style="margin-top:0;max-width:100%;" />
+            <div class="hangup-check-item">
+              <div class="hangup-check-num">2</div>
+              <div class="hangup-check-text">
+                <strong>Reference / Confirmation #</strong>
+                <span>Número de referencia o confirmación de la llamada</span>
+              </div>
+            </div>
+            <div class="hangup-check-item">
+              <div class="hangup-check-num">3</div>
+              <div class="hangup-check-text">
+                <strong>Everything they told you</strong>
+                <span>Todo lo que indicaron sobre cobertura, autorizaciones y deducibles</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input fields highlighted -->
+          <div class="hangup-inputs">
+            <div class="hangup-input-group">
+              <label class="hangup-input-label">
+                <span class="material-symbols-outlined">badge</span> Nombre del Representante <span class="hangup-required">REQUERIDO</span>
+              </label>
+              <input class="q-input-field hangup-field" type="text" id="repName"
+                placeholder="Ej. María González — agente de Member Services" style="max-width:100%;margin-top:0;" />
+            </div>
+            <div class="hangup-input-group">
+              <label class="hangup-input-label">
+                <span class="material-symbols-outlined">tag</span> Número de Referencia de la Llamada <span class="hangup-required">REQUERIDO</span>
+              </label>
+              <input class="q-input-field hangup-field" type="text" id="refNum"
+                placeholder="Ej. REF-2024-8847291" style="max-width:100%;margin-top:0;" />
             </div>
           </div>
         </div>
