@@ -1,4 +1,4 @@
-﻿const functions = require("firebase-functions");
+const functions = require("firebase-functions");
 const admin     = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
@@ -22,14 +22,14 @@ exports.enviarInformeSeguro = functions
     const d = snap.data();
 
     // â”€â”€ HTML DEL EMAIL â€” INFORME PROFESIONAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const esApto = d.resultado === "APTO";
+    const esApto = d.resultado === "ELIGIBLE" || d.resultado === "APTO";
     const verde  = "#10b981";
     const rojo   = "#ef4444";
     const morado = "#7c3aed";
     const azul   = "#3b82f6";
     const gris   = "#1e1e2e";
 
-    const f = (val) => val || "â€”";
+    const f = (val) => val || "—";
     const fila = (label, valor, color="") => `
       <tr>
         <td style="padding:8px 14px;font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;
@@ -42,28 +42,28 @@ exports.enviarInformeSeguro = functions
       `<span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;
               background:${esApto?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};
               color:${esApto?verde:rojo};border:1px solid ${esApto?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.3)"};">
-        ${esApto?"âœ… APTO":"âŒ NO APTO"}
+        ${esApto ? "ELIGIBLE" : "NOT ELIGIBLE"}
       </span>`;
 
-    // ImÃ¡genes de la tarjeta como base64 inline
+    // Card images as inline base64 (when provided)
     const imgFront = d.b64Front
-      ? `<img src="${d.b64Front}" alt="Frente de la tarjeta"
+      ? `<img src="${d.b64Front}" alt="Insurance card front"
               style="width:100%;max-width:340px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;" />`
       : `<div style="width:100%;height:120px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;
-              display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">Sin imagen</div>`;
+              display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
     const imgBack = d.b64Back
-      ? `<img src="${d.b64Back}" alt="Reverso de la tarjeta"
+      ? `<img src="${d.b64Back}" alt="Insurance card back"
               style="width:100%;max-width:340px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;" />`
       : `<div style="width:100%;height:120px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;
-              display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">Sin imagen</div>`;
+              display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
 
     const html = `
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Informe de VerificaciÃ³n de Seguro</title>
+  <title>Insurance verification report</title>
 </head>
 <body style="margin:0;padding:0;background:#0f0f1a;font-family:'Helvetica Neue',Arial,sans-serif;">
 
@@ -81,9 +81,9 @@ exports.enviarInformeSeguro = functions
           <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.18em;
                       color:rgba(255,255,255,0.7);margin-bottom:8px;">MedAuth Pro</div>
           <div style="font-size:28px;font-weight:800;color:#fff;margin:0 0 6px;letter-spacing:-.02em;">
-            VerificaciÃ³n de Seguro MÃ©dico
+            Medical insurance verification
           </div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.75);">CirugÃ­a BariÃ¡trica Â· Informe AutomÃ¡tico</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.75);">Bariatric surgery · Automated report</div>
         </td>
       </tr>
 
@@ -91,15 +91,15 @@ exports.enviarInformeSeguro = functions
       <tr>
         <td style="padding:28px 36px;text-align:center;background:${esApto?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.07)"};
                    border-bottom:1px solid ${esApto?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"};">
-          <div style="font-size:44px;margin-bottom:10px;">${esApto?"ðŸŽ‰":"âš ï¸"}</div>
+          <div style="font-size:44px;margin-bottom:10px;">${esApto ? "&#127881;" : "&#9888;"}</div>
           <div style="display:inline-block;padding:8px 24px;border-radius:99px;font-size:22px;font-weight:800;
                       background:${esApto?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};
                       color:${esApto?verde:rojo};border:2px solid ${esApto ? verde : rojo};">
-            ${esApto?"âœ… APTO":"âŒ NO APTO"}
+            ${esApto ? "ELIGIBLE" : "NOT ELIGIBLE"}
           </div>
           <p style="color:${esApto?"#a7f3d0":"#fca5a5"};font-size:14px;margin:12px 0 0;line-height:1.5;">
             ${esApto
-              ? `<strong style="color:#fff;">${f(d.nombre)}</strong> cumple los criterios de elegibilidad para la cirugÃ­a bariÃ¡trica.`
+              ? `<strong style="color:#fff;">${f(d.nombre)}</strong> meets the eligibility criteria for bariatric surgery.`
               : `<strong style="color:#fff;">${f(d.nombre)}</strong> does NOT meet all the criteria at this time.`}
           </p>
         </td>
@@ -109,15 +109,15 @@ exports.enviarInformeSeguro = functions
       <tr>
         <td style="padding:20px 36px;text-align:center;border-bottom:1px solid #2d2d3d;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:10px;">
-            DecisiÃ³n de AutorizaciÃ³n del Procedimiento
+            Procedure authorization decision
           </div>
           <div style="display:inline-block;padding:10px 28px;border-radius:12px;font-size:18px;font-weight:800;
                       background:${d.autorizacionFinal==='AUTHORIZED'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};
                       color:${d.autorizacionFinal==='AUTHORIZED'?verde:rojo};
                       border:2px solid ${d.autorizacionFinal==='AUTHORIZED'?verde:rojo};">
-            ${d.autorizacionFinal==='AUTHORIZED'?'âœ… AUTHORIZED':'âŒ NO AUTHORIZED'}
+            ${d.autorizacionFinal==='AUTHORIZED'?'AUTHORIZED':'NOT AUTHORIZED'}
           </div>
-          ${!d.autorizacionFinal?`<p style="color:#f59e0b;font-size:12px;margin:8px 0 0;">âš ï¸ DecisiÃ³n no registrada</p>`:''}
+          ${!d.autorizacionFinal?`<p style="color:#f59e0b;font-size:12px;margin:8px 0 0;">Decision not recorded</p>`:''}
         </td>
       </tr>
 
@@ -128,18 +128,18 @@ exports.enviarInformeSeguro = functions
                     padding:20px;margin-bottom:28px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
                       color:${azul};margin-bottom:16px;border-bottom:1px solid #2d2d3d;padding-bottom:10px;">
-            ðŸ’³ Tarjeta del Seguro â€” ImÃ¡genes Capturadas
+            Insurance card — captured images
           </div>
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td width="50%" style="padding-right:8px;vertical-align:top;">
                 <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${morado};
-                            letter-spacing:.1em;margin-bottom:8px;">ðŸªª Frente</div>
+                            letter-spacing:.1em;margin-bottom:8px;">Front</div>
                 ${imgFront}
               </td>
               <td width="50%" style="padding-left:8px;vertical-align:top;">
                 <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#06b6d4;
-                            letter-spacing:.1em;margin-bottom:8px;">ðŸ”„ Reverso</div>
+                            letter-spacing:.1em;margin-bottom:8px;">Back</div>
                 ${imgBack}
               </td>
             </tr>
@@ -150,7 +150,7 @@ exports.enviarInformeSeguro = functions
         <div style="margin-bottom:24px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
                       color:${morado};margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">
-            ðŸªª IdentificaciÃ³n del Seguro
+            Insurance identification
           </div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid #2d2d3d;">
             ${fila("Patient", d.nombre, "#e2e8f0")}
@@ -173,7 +173,7 @@ exports.enviarInformeSeguro = functions
         <div style="margin-bottom:24px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
                       color:#06b6d4;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">
-            ðŸ’Š Copagos y Costos MÃ©dicos
+            Copays and medical costs
           </div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
             ${fila("PCP / Primary Care Copay", d.copayPCP)}
@@ -190,7 +190,7 @@ exports.enviarInformeSeguro = functions
         <div style="margin-bottom:24px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
                       color:${azul};margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">
-            ðŸ’Š Plan de Farmacia
+            Pharmacy plan
           </div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
             ${fila("RxBIN / Rx BIN#", d.rxBin)}
@@ -203,11 +203,11 @@ exports.enviarInformeSeguro = functions
         <div style="margin-bottom:24px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
                       color:#94a3b8;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #2d2d3d;">
-            ðŸ“ž Contactos y PCP
+            Contacts and PCP
           </div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #2d2d3d;border-radius:8px;overflow:hidden;">
             ${fila("Member Services Phone", d.phoneSeguro, "#6ee7b7")}
-            ${fila("Tel. AutorizaciÃ³n Previa", d.phoneAuth)}
+            ${fila("Prior authorization phone", d.phoneAuth)}
             ${fila("PCP Name", d.pcpName)}
             ${fila("PCP Phone", d.pcpPhone)}
             ${fila("Website", d.website)}
@@ -218,22 +218,22 @@ exports.enviarInformeSeguro = functions
         <div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${esApto?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
                       color:${esApto?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">
-            ðŸ“‹ Preguntas del Script de VerificaciÃ³n
+            Verification call script — answers
           </div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-            ${fila("1. Â¿Cubierta? (Is it covered?)", d.cobertura,
-              ["Si","Parcial"].includes(d.cobertura)?verde:rojo)}
-            ${fila("2. Â¿AutorizaciÃ³n previa?", d.autorizacion,
-              d.autorizacion?.includes("Obtenida")||d.autorizacion?.includes("No Requerida")?verde:rojo)}
-            ${fila("3. Â¿Referencia del PCP?", d.referencia)}
-            ${fila("4. Â¿Facilidad especÃ­fica?", d.facilidad)}
+            ${fila("1. Covered?", d.cobertura,
+              ["Yes","Partial","Si","Parcial"].includes((d.cobertura||"").trim())?verde:rojo)}
+            ${fila("2. Prior authorization?", d.autorizacion,
+              d.autorizacion && (/\b(Obtained|Not required)\b/i.test(d.autorizacion)||d.autorizacion.includes("Obtenida")||d.autorizacion.includes("No Requerida"))?verde:rojo)}
+            ${fila("3. PCP referral?", d.referencia)}
+            ${fila("4. Specific facility?", d.facilidad)}
             ${d.facilidadDetalle ? fila("   Facility detail", d.facilidadDetalle) : ""}
             ${fila("5. Total Deductible (call)", d.deducibleTotal)}
             ${fila("   Deductible met", d.deducibleMet)}
             ${fila("   Copay / Coinsurance (call)", d.copago)}
-            ${fila("   Out-of-Pocket MÃ¡ximo", d.oopMax)}
-            ${fila("Insurance Rep.", d.repName)}
-            ${fila("NÃºmero de referencia", d.refNum)}
+            ${fila("   Out-of-pocket max", d.oopMax)}
+            ${fila("Insurance rep.", d.repName)}
+            ${fila("Reference number", d.refNum)}
           </table>
           ${d.notasRep ? `
           <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid #2d2d3d;">
@@ -246,10 +246,10 @@ exports.enviarInformeSeguro = functions
         <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.2);
                     border-radius:8px;padding:14px 18px;text-align:center;margin-bottom:16px;">
           <div style="font-size:11px;color:#a78bfa;font-weight:600;">
-            ðŸ“ ID Expediente: <code style="font-family:monospace;color:#c4b5fd;">${f(d.expedienteId)}</code>
+            Record ID: <code style="font-family:monospace;color:#c4b5fd;">${f(d.expedienteId)}</code>
           </div>
           <div style="font-size:11px;color:#64748b;margin-top:4px;">
-            Date: ${d.fecha ? new Date(d.fecha._seconds*1000).toLocaleString("es-CO",{timeZone:"America/Bogota"}) : new Date().toLocaleString("es-CO")}
+            Date: ${d.fecha ? new Date(d.fecha._seconds*1000).toLocaleString("en-US",{timeZone:"America/Chicago"}) : new Date().toLocaleString("en-US",{timeZone:"America/Chicago"})}
           </div>
         </div>
 
@@ -259,7 +259,7 @@ exports.enviarInformeSeguro = functions
       <tr>
         <td style="background:#0d0d1f;padding:20px 36px;text-align:center;border-top:1px solid #2d2d3d;">
           <p style="font-size:12px;color:#475569;margin:0;line-height:1.6;">
-            Este informe fue generado automÃ¡ticamente por <strong style="color:#7c3aed;">MedAuth Pro</strong><br/>
+            This report was automatically generated by <strong style="color:#7c3aed;">MedAuth Pro</strong><br/>
             Email sent to: <a href="mailto:michaelandresfloreshenao@gmail.com"
               style="color:#7c3aed;text-decoration:none;">michaelandresfloreshenao@gmail.com</a>
           </p>
@@ -276,7 +276,7 @@ exports.enviarInformeSeguro = functions
     `;
 
     // â”€â”€ Asunto del email â”€â”€
-    const asunto = `[${d.resultado}] ${f(d.nombre)} â€” VerificaciÃ³n de Seguro BariÃ¡trico`;
+    const asunto = `[${d.resultado}] ${f(d.nombre)} — Bariatric insurance verification`;
 
     await transporter.sendMail({
       from:    `"MedAuth Pro" <${functions.config().gmail.user}>`,
@@ -285,9 +285,9 @@ exports.enviarInformeSeguro = functions
       html:    html,
     });
 
-    console.log(`âœ… Informe enviado â€” ${d.nombre} â€” ${d.resultado}`);
+    console.log(`Report sent — ${d.nombre} — ${d.resultado}`);
 
-    // Limpiar el queue
+    // Mark queue item complete
     await snap.ref.update({ emailEnviado: true, emailDate: admin.firestore.FieldValue.serverTimestamp() });
     return null;
   });

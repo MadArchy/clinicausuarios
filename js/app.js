@@ -1,7 +1,6 @@
 /* ============================================================
-   APP.JS â€” OCR multi-formato para tarjetas de seguro mÃ©dico
-   Soporta: Ambetter, Amerigroup, BlueCross, Christus, Molina
-   y cualquier otro asegurador comÃºn de Texas/USA
+   MedAuth Pro — client-side OCR for US insurance cards
+   (Ambetter, Amerigroup, BCBS, Christus, Molina, and similar)
    ============================================================ */
 "use strict";
 
@@ -17,16 +16,16 @@ const State = {
 };
 
 const STEP_LABELS = [
-  { label:"Datos del Paciente y Tarjeta del Seguro", pct:33  },
-  { label:"Script de Llamada al Seguro",             pct:66  },
-  { label:"Resultado Final",                         pct:100 },
+  { label: "Patient data & insurance card", pct: 33 },
+  { label: "Insurance call script", pct: 66 },
+  { label: "Final result", pct: 100 },
 ];
 
 // â”€â”€ NAVEGACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateProgress(step) {
   const c = STEP_LABELS[step-1];
   document.getElementById("progressFill").style.width  = c.pct+"%";
-  document.getElementById("progressLabel").textContent = `Paso ${step} de 3`;
+  document.getElementById("progressLabel").textContent = `Step ${step} of 3`;
   document.getElementById("progressCount").textContent = c.label;
   for (let i=1;i<=3;i++){
     const d=document.getElementById(`dot-${i}`);
@@ -41,9 +40,9 @@ function goToScript() {
   const banner = document.getElementById('formErrorBanner');
   if (banner) banner.style.display = 'none';
 
-  const nm  = v('f_subscriberName') || v('f_memberName') || 'â€”';
-  const mid = v('f_memberId') || v('f_subscriberId') || 'â€”';
-  const grp = v('f_groupNum') || 'â€”';
+  const nm  = v('f_subscriberName') || v('f_memberName') || '—';
+  const mid = v('f_memberId') || v('f_subscriberId') || '—';
+  const grp = v('f_groupNum') || '—';
   
   if (document.getElementById('scriptName')) document.getElementById('scriptName').textContent = nm;
   if (document.getElementById('scriptMid')) document.getElementById('scriptMid').textContent = mid;
@@ -75,7 +74,7 @@ function showStep(to) {
 function handleCard(side, event) {
   const file = event.target.files[0];
   if (!file || !file.type.startsWith("image/")) {
-    alert("âš ï¸ Solo se permiten imÃ¡genes (JPG, PNG, WEBP, HEIC).");
+    alert("Only image files are allowed (JPG, PNG, WEBP, HEIC).");
     return;
   }
   State.files[side] = file;
@@ -141,34 +140,36 @@ async function runOCR(side, dataUrl) {
   const fill  = document.getElementById(`ocr${cap(side)}Fill`);
   const label = document.getElementById(`ocr${cap(side)}Label`);
   panel.classList.add("visible");
-  label.textContent = side==="front" ? "Analizando frente de la tarjeta..." : "Analizando reverso...";
+  label.textContent = side === "front" ? "Reading front of card..." : "Reading back of card...";
   fill.style.width = "5%";
   try {
     const worker = await Tesseract.createWorker("eng+spa", 1, {
       logger: m => {
         if (m.status === "recognizing text") {
           fill.style.width = Math.round(m.progress*100)+"%";
-          label.textContent = `Extrayendo datos... ${Math.round(m.progress*100)}%`;
+          label.textContent = `Extracting text... ${Math.round(m.progress * 100)}%`;
         }
       },
     });
     const { data: { text } } = await worker.recognize(dataUrl);
     await worker.terminate();
     fill.style.width  = "100%";
-    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> InformaciÃ³n extraÃ­da correctamente";
+    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Data extracted successfully";
     // Mostrar texto crudo
     const rawBlock = document.getElementById("ocrRawBlock");
     const rawArea  = document.getElementById("ocrRawText");
     if (rawBlock && rawArea) {
       rawBlock.style.display = "block";
-      rawArea.value = (rawArea.value ? rawArea.value + "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
-      if (side==="front") rawArea.value = text.trim();
-      else rawArea.value = rawArea.value + (rawArea.value ? "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
+      if (side === "front") {
+        rawArea.value = text.trim();
+      } else {
+        rawArea.value = (rawArea.value ? rawArea.value.trim() + "\n\n--- CARD BACK ---\n" : "") + text.trim();
+      }
     }
     if (side==="front") parseFront(text);
     else                parseBack(text);
   } catch(err) {
-    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Error de lectura â€” completa los datos manualmente";
+    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Read error — please enter the details manually";
     console.error("OCR error:", err);
   }
 }
@@ -683,17 +684,22 @@ function setAnswer(key, value, btn, cls) {
 
 // â”€â”€ EVALUACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function evaluar(data) {
-  const cobOK  = ["Si","Parcial"].includes(data.cobertura);
-  const authOK = data.autorizacion &&
-    (data.autorizacion.includes("Obtenida")||data.autorizacion.includes("No Requerida"));
-  return (cobOK && authOK) ? "APTO" : "NO APTO";
+  const cob = (data.cobertura || "").trim();
+  const cobOK = ["Yes", "Partial", "Si", "Parcial"].includes(cob);
+  const auth = data.autorizacion || "";
+  const authOK =
+    auth &&
+    (/\b(Obtained|Not required)\b/i.test(auth) ||
+      auth.includes("Obtenida") ||
+      auth.includes("No Requerida"));
+  return cobOK && authOK ? "ELIGIBLE" : "NOT ELIGIBLE";
 }
 
 // â”€â”€ SUBIR ARCHIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function uploadFile(file, side) {
   if (!file) return null;
   const ref = firebase.storage().ref()
-    .child(`seguros/${Date.now()}_${side}_${file.name.replace(/[^\w.\-]/g,"_")}`);
+    .child(`cards/${Date.now()}_${side}_${file.name.replace(/[^\w.\-]/g,"_")}`);
   await ref.put(file);
   return await ref.getDownloadURL();
 }
@@ -782,7 +788,7 @@ const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // Email Templates tab
 
 // -- GENERATE HTML REPORT ------------------------------------
 function generateEmailHTML(data) {
-  const esApto = data.resultado === "APTO";
+  const esApto = data.resultado === "ELIGIBLE" || data.resultado === "APTO";
   const verde  = "#10b981";
   const rojo   = "#ef4444";
   const morado = "#7c3aed";
@@ -925,8 +931,8 @@ ${data.rxBin||data.rxPcn||data.rxGrp ? `
 <div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${esApto?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
   <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${esApto?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-    ${fila("1. Covered?",                 data.cobertura,      ["Si","Parcial"].includes(data.cobertura)?verde:rojo)}
-    ${fila("2. Prior Authorization?",     data.autorizacion,   data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida")?verde:rojo)}
+    ${fila("1. Covered?",                 data.cobertura,      ["Yes","Partial","Si","Parcial"].includes((data.cobertura||"").trim())?verde:rojo)}
+    ${fila("2. Prior Authorization?",     data.autorizacion,   (data.autorizacion && (/\b(Obtained|Not required)\b/i.test(data.autorizacion)||data.autorizacion.includes("Obtenida")||data.autorizacion.includes("No Requerida")))?verde:rojo)}
     ${fila("3. PCP Referral?",            data.referencia)}
     ${fila("4. Specific Facility?",       data.facilidad)}
     ${data.facilidadDetalle ? fila("   Facility Detail", data.facilidadDetalle) : ""}
@@ -987,8 +993,8 @@ async function _doSubmit() {
   try {
     ss.querySelector("span:last-child").textContent = "Uploading card images...";
     const [urlFront, urlBack] = await Promise.all([
-      uploadFile(State.files.front, "frente"),
-      uploadFile(State.files.back,  "reverso"),
+      uploadFile(State.files.front, "front"),
+      uploadFile(State.files.back, "back"),
     ]);
 
     const data = recopilar();
@@ -1032,7 +1038,7 @@ async function _doSubmit() {
 
 // â”€â”€ RESULTADO FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showResultado(resultado, data) {
-  const esApto = resultado==="APTO";
+  const esApto = resultado === "ELIGIBLE" || resultado === "APTO";
   document.getElementById("progressWrapper").style.display="none";
   document.getElementById("step-2").classList.remove("active");
   document.getElementById("step-3").classList.add("active");
@@ -1043,14 +1049,14 @@ function showResultado(resultado, data) {
   const row=(label,val,accent=false)=>`
     <div class="summary-row">
       <span class="summary-key">${label}</span>
-      <span class="summary-val${accent?" summary-accent":""}">${val||"â€”"}</span>
+      <span class="summary-val${accent?" summary-accent":""}">${val || "—"}</span>
     </div>`;
   const chip=(val,good)=>`
-    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"â€”"}</span>`;
+    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val || "—"}</span>`;
 
   rc.innerHTML=`
     <div class="result-icon-wrapper">${esApto?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
-    <div class="result-badge">${esApto?"<span class='material-symbols-outlined'>check_circle</span> APTO":"<span class='material-symbols-outlined'>cancel</span> NO APTO"}</div>
+    <div class="result-badge">${esApto?"<span class='material-symbols-outlined'>check_circle</span> ELIGIBLE":"<span class='material-symbols-outlined'>cancel</span> NOT ELIGIBLE"}</div>
     <p class="result-message">
       ${esApto
         ?`<strong>${data.nombre}</strong> meets the eligibility criteria for bariatric surgery.`
@@ -1070,7 +1076,7 @@ function showResultado(resultado, data) {
     </div>`:""}
 
     <div class="summary-table">
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">IdentificaciÃ³n del Seguro</p>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">Insurance identification</p>
       ${row("Insurance Company", data.aseguradora)}
       ${row("Subscriber Name", data.subscriberName)}
       ${row("Member Name", data.memberName)}
@@ -1095,21 +1101,21 @@ function showResultado(resultado, data) {
       ${row("RxPCN", data.rxPcn)}
       ${row("RxGroup", data.rxGrp)}
 
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Resultado de la VerificaciÃ³n</p>
-      <div class="summary-row"><span class="summary-key">ÂCovered?</span>${chip(data.cobertura,["Si","Parcial"].includes(data.cobertura))}</div>
-      <div class="summary-row"><span class="summary-key">AutorizaciÃ³n</span>${chip(data.autorizacion,data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida"))}</div>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Verification call results</p>
+      <div class="summary-row"><span class="summary-key">Covered?</span>${chip(data.cobertura,["Yes","Partial","Si","Parcial"].includes((data.cobertura||"").trim()))}</div>
+      <div class="summary-row"><span class="summary-key">Prior authorization</span>${chip(data.autorizacion,data.autorizacion && (/\b(Obtained|Not required)\b/i.test(data.autorizacion)||data.autorizacion.includes("Obtenida")||data.autorizacion.includes("No Requerida")))}</div>
       ${row("Deductible (call)", data.deducibleTotal)}
       ${row("Deductible met", data.deducibleMet)}
       ${row("Copay/Coinsurance (call)", data.copago)}
-      ${row("Out-of-Pocket MÃ¡x.", data.oopMax)}
+      ${row("Out-of-pocket max", data.oopMax)}
       ${row("Insurance Rep", data.repName)}
       ${row("Reference #", data.refNum)}
       ${data.notasRep?`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="summary-key">Additional notes</span><span class="summary-val" style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${data.notasRep}</span></div>`:""}
-      ${row("Record ID", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId||"â€”"}</span>`)}
+      ${row("Record ID", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId || "—"}</span>`)}
     </div>
 
     <div style="margin-top:18px;padding:14px 18px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-sm);text-align:center;">
-      <p style="font-size:13px;color:#34d399;margin:0;">ðŸ“§ Informe enviado automÃ¡ticamente a <strong>michaelandresfloreshenao@gmail.com</strong></p>
+      <p style="font-size:13px;color:#34d399;margin:0;">Report emailed automatically to <strong>michaelandresfloreshenao@gmail.com</strong></p>
     </div>
     <button class="btn btn-secondary" style="margin-top:18px;" onclick="resetAll()">+ Evaluate New Patient</button>
   `;
@@ -1149,7 +1155,7 @@ function resetAll() {
 // â”€â”€ CONFETTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function confetti() {
   const c=document.getElementById("confettiContainer");
-  const cols=["#0077ce","#10b981","#3b82f6","#f59e0b","#ec4899","#06b6d4"];
+  const cols=["#1E3A5F","#2FA4A9","#4A90E2","#f59e0b","#ec4899","#279399"];
   for(let i=0;i<80;i++){
     const p=document.createElement("div"); p.className="confetti-piece";
     p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?"50%":"2px"};`;
@@ -1160,7 +1166,7 @@ function confetti() {
 
 document.addEventListener("DOMContentLoaded",()=>{
   updateProgress(1);
-  console.log("âœ… MedAuth Pro â€” motor OCR multi-formato cargado");
+  console.log("MedAuth Pro — OCR module ready");
 });
 
 // â”€â”€ UI TOGGLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1172,7 +1178,7 @@ window.toggleOCRData = function() {
     icon.innerHTML = "Hide data <span class='material-symbols-outlined'>expand_less</span>";
   } else {
     sec.style.display = "none";
-    icon.innerHTML = "Ver datos extraÃ­dos <span class='material-symbols-outlined'>expand_more</span>";
+    icon.innerHTML = "View extracted data <span class='material-symbols-outlined'>expand_more</span>";
   }
 };
 

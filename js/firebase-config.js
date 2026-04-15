@@ -1,5 +1,5 @@
 // ============================================================
-//  CONFIGURACIÓN FIREBASE — Proyecto: datosdelpaciente-8e3ba
+//  Firebase config — project: datosdelpaciente-8e3ba
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBpwCXszj969xjV_WNz6ualo_g8NQ-uOy4",
