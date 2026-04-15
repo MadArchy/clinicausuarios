@@ -1,43 +1,43 @@
-# 🏥 MedAuth Pro — Sistema de Evaluación de Pacientes
+# MedAuth Pro — Patient insurance verification
 
-Sistema automatizado de elegibilidad para cirugías cubiertas por seguro médico.
-Evalúa **APTO / NO APTO** y envía email automático a `michaelandresfloreshenao@gmail.com`.
-
----
-
-## ✅ Lo que ya está configurado
-
-- ✅ Firebase Project: `datosdelpaciente-8e3ba`
-- ✅ Email destino: `michaelandresfloreshenao@gmail.com`
-- ✅ OCR con Tesseract.js (lee texto de imágenes de tarjetas de seguro)
-- ✅ Evaluación automática APTO / NO APTO
-- ✅ Diseño premium dark mode
+Automated eligibility workflow for procedures covered by medical insurance.
+Evaluates **ELIGIBLE / NOT ELIGIBLE** (legacy records may still show **APTO / NO APTO**) and sends an automated email to `michaelandresfloreshenao@gmail.com`.
 
 ---
 
-## 🚀 PASOS PARA PONER EN PRODUCCIÓN
+## Already configured
 
-### PASO 1 — Habilitar Firestore y Storage en Firebase
-
-1. Ir a → https://console.firebase.google.com/project/datosdelpaciente-8e3ba
-2. **Firestore Database** → "Crear base de datos" → Modo producción
-3. **Storage** → "Comenzar"
-
----
-
-### PASO 2 — Configurar App Password de Gmail
-
-> ⚠️ NO uses tu contraseña normal de Gmail. Necesitas una **App Password**.
-
-1. Ve a → https://myaccount.google.com/security
-2. Habilita la **Verificación en 2 pasos** si no la tienes
-3. Ve a → https://myaccount.google.com/apppasswords
-4. Selecciona `Correo` y `Otro dispositivo` → nombra "MedAuth"
-5. Copia la contraseña de 16 caracteres que genera Google
+- Firebase project: `datosdelpaciente-8e3ba`
+- Email destination: `michaelandresfloreshenao@gmail.com`
+- OCR with Tesseract.js (reads text from insurance card photos)
+- Automatic eligibility evaluation
+- Polished UI for clinic staff
 
 ---
 
-### PASO 3 — Instalar Firebase CLI (si no lo tienes)
+## Steps to go live
+
+### Step 1 — Enable Firestore and Storage
+
+1. Open https://console.firebase.google.com/project/datosdelpaciente-8e3ba
+2. **Firestore Database** → Create database → production mode
+3. **Storage** → Get started
+
+---
+
+### Step 2 — Gmail app password
+
+> Do not use your normal Gmail password. You need an **app password**.
+
+1. https://myaccount.google.com/security
+2. Turn on **2-Step Verification** if it is off
+3. https://myaccount.google.com/apppasswords
+4. Choose **Mail** and **Other** → name it `MedAuth`
+5. Copy the 16-character password Google shows
+
+---
+
+### Step 3 — Firebase CLI (if needed)
 
 ```powershell
 npm install -g firebase-tools
@@ -46,121 +46,105 @@ firebase login
 
 ---
 
-### PASO 4 — Configurar credenciales del email
+### Step 4 — Email credentials
 
 ```powershell
-# Navegar a la carpeta del proyecto
-cd "c:\Users\user\Desktop\formulario  para  envio de  datos del paciente"
+cd path\to\clinicausuarios
 
-# Instalar dependencias de Functions
 cd functions
 npm install
 cd ..
 
-# Configurar credenciales de Gmail (reemplaza con tu App Password exacta)
-firebase functions:config:set gmail.user="michaelandresfloreshenao@gmail.com" gmail.password="AQUI_TU_APP_PASSWORD_16_CHARS"
+firebase functions:config:set gmail.user="michaelandresfloreshenao@gmail.com" gmail.password="YOUR_16_CHAR_APP_PASSWORD"
 ```
 
 ---
 
-### PASO 5 — Desplegar en Firebase
+### Step 5 — Deploy
 
 ```powershell
-# Desplegar todo (hosting + functions + rules)
 firebase deploy
 ```
 
-Cuando termine, obtendrás una URL como:
+You should get a URL similar to:
+
 ```
 ✓ Hosting URL: https://datosdelpaciente-8e3ba.web.app
 ```
 
 ---
 
-### PASO 6 — Probar localmente (opcional)
+### Step 6 — Local testing (optional)
 
-Simplemente abre el archivo `index.html` en tu navegador.
-> Sin Firebase Functions en local, el email NO se enviará, pero el formulario y OCR funcionan completamente.
-
----
-
-## 📸 ¿Cómo funciona el OCR?
-
-1. Usuario sube una **foto de la tarjeta del seguro** (JPG, PNG, WEBP)
-2. **Tesseract.js** (IA de reconocimiento de texto) lee la imagen en el navegador
-3. El sistema detecta automáticamente:
-   - **Member ID** — busca patrones como `ID: XXXX`, `MEMBER ID XXXX`
-   - **Group Number** — busca patrones como `GROUP: XXXX`, `GRP XXXX`
-   - **Aseguradora** — detecta nombres como Blue Cross, Aetna, Cigna, etc.
-4. Completa los campos del formulario automáticamente
-5. El agente verifica y corrige cualquier dato incorrecto
-
-> 💡 El OCR funciona mejor con **fotos nítidas**, bien iluminadas y en buena resolución.
+Open `index.html` in the browser. Without deployed Cloud Functions, the email step may not run, but the form and OCR still work in the browser.
 
 ---
 
-## 🧠 Lógica de Evaluación APTO / NO APTO
+## How OCR works
+
+1. User uploads an **insurance card photo** (JPG, PNG, WEBP).
+2. **Tesseract.js** runs in the browser.
+3. The app tries to detect **Member ID**, **Group**, **insurer name**, and related fields from common US card layouts.
+4. Form fields are filled automatically; staff should verify and correct as needed.
+
+> OCR works best with **sharp**, well-lit, high-resolution photos.
+
+---
+
+## Eligibility logic (summary)
 
 ```
-APTO si:
-  ✅ Cirugía cubierta (Sí o Parcial)
-  ✅ Autorización previa (Sí o No requerida)  
-  ✅ Dentro de la red (In-Network)
+ELIGIBLE when:
+  - Surgery covered (Yes or Partial)
+  - Prior authorization obtained, or not required
 
-NO APTO si:
-  ❌ Cirugía NO cubierta
-  ❌ Requiere autorización pero NO fue obtenida
-  ❌ Fuera de la red (Out-of-Network)
+NOT ELIGIBLE when:
+  - Surgery not covered
+  - Prior authorization required but not obtained
 ```
+
+(Network rules in the README snippet above were illustrative; the live rules are implemented in `js/app.js`.)
 
 ---
 
-## 📧 Email automático
+## Automated email
 
-Cuando se guarda un paciente, **automáticamente** se envía un email a `michaelandresfloreshenao@gmail.com` con:
-
-- 🏷️ Asunto: `🏥 Paciente APTO/NO APTO — [Nombre] | [Aseguradora]`
-- 👤 Datos completos del paciente
-- 🏦 Información del seguro (Member ID, Group, Plan)
-- ✅ Resultado de la verificación de cobertura
-- 💰 Información financiera (deducible, copago)
-- 📎 Enlace al documento subido
+When a record is saved, an email goes to `michaelandresfloreshenao@gmail.com` with patient and insurance details, verification answers, and embedded card images when available.
 
 ---
 
-## 🗂️ Estructura del Proyecto
+## Project layout
 
 ```
-formulario-paciente/
-├── index.html              ← Formulario principal
-├── css/
-│   └── styles.css          ← Diseño premium dark mode
-├── js/
-│   ├── app.js              ← Lógica + OCR + Firebase
-│   └── firebase-config.js  ← Configuración Firebase
-├── functions/
-│   ├── index.js            ← Cloud Function email (Nodemailer)
-│   └── package.json
-├── firestore.rules         ← Reglas de seguridad
-├── storage.rules           ← Reglas de almacenamiento
+clinicausuarios/
+├── index.html
+├── css/styles.css
+├── js/app.js
+├── js/firebase-config.js
+├── functions/index.js
+├── functions/package.json
+├── firestore.rules
+├── storage.rules
 ├── firebase.json
 └── .firebaserc
 ```
 
 ---
 
-## ⚠️ Resolución de Problemas
+## Troubleshooting
 
-### El formulario no guarda en Firebase
-- Verifica que Firestore esté habilitado en la consola
-- Revisa las reglas de `firestore.rules`
+### Data does not save to Firebase
 
-### El email no llega
-- Verifica que la App Password de Gmail esté correcta
-- Revisa los logs: `firebase functions:log`
-- Asegúrate que less secure app access no interfiera
+- Confirm Firestore is enabled in the console
+- Review `firestore.rules`
 
-### El OCR no detecta nada
-- Usa imágenes nítidas, bien iluminadas
-- Evita PDFs (solo funciona con imágenes JPG/PNG)
-- El texto del seguro debe estar en inglés o español
+### Email never arrives
+
+- Confirm the Gmail app password in `firebase functions:config`
+- Check logs: `firebase functions:log`
+
+### OCR misses fields
+
+- Use sharp, well-lit images
+- PDF uploads are not supported (image files only)
+- Card text can be English or Spanish; the OCR language pack includes both

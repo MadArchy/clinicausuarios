@@ -1,7 +1,7 @@
 /* ============================================================
-   APP.JS â€” OCR multi-formato para tarjetas de seguro mÃ©dico
-   Soporta: Ambetter, Amerigroup, BlueCross, Christus, Molina
-   y cualquier otro asegurador comÃºn de Texas/USA
+   APP.JS — Multi-format OCR for medical insurance cards
+   Supports: Ambetter, Amerigroup, BlueCross, Christus, Molina,
+   and other common Texas / US insurers
    ============================================================ */
 "use strict";
 
@@ -10,23 +10,23 @@ const State = {
   step: 1,
   files:   { front: null, back: null },
   urls:    { front: null, back: null },
-  b64:     { front: null, back: null },        // base64 para el email
-  ocr:     {},                                  // datos crudos extraÃ­dos
+  b64:     { front: null, back: null },        // base64 for email attachment
+  ocr:     {},                                  // raw extracted OCR payload
   answers: { q1:null, q2:null, q3:null, q4:null },
   autorizacionFinal: null,                      // modal decision
 };
 
 const STEP_LABELS = [
-  { label:"Datos del Paciente y Tarjeta del Seguro", pct:33  },
-  { label:"Script de Llamada al Seguro",             pct:66  },
-  { label:"Resultado Final",                         pct:100 },
+  { label:"Patient data and insurance card", pct:33  },
+  { label:"Insurance call script",             pct:66  },
+  { label:"Final result",                         pct:100 },
 ];
 
 // â”€â”€ NAVEGACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateProgress(step) {
   const c = STEP_LABELS[step-1];
   document.getElementById("progressFill").style.width  = c.pct+"%";
-  document.getElementById("progressLabel").textContent = `Paso ${step} de 3`;
+  document.getElementById("progressLabel").textContent = `Step ${step} of 3`;
   document.getElementById("progressCount").textContent = c.label;
   for (let i=1;i<=3;i++){
     const d=document.getElementById(`dot-${i}`);
@@ -41,9 +41,9 @@ function goToScript() {
   const banner = document.getElementById('formErrorBanner');
   if (banner) banner.style.display = 'none';
 
-  const nm  = v('f_subscriberName') || v('f_memberName') || 'â€”';
-  const mid = v('f_memberId') || v('f_subscriberId') || 'â€”';
-  const grp = v('f_groupNum') || 'â€”';
+  const nm  = v('f_subscriberName') || v('f_memberName') || '—';
+  const mid = v('f_memberId') || v('f_subscriberId') || '—';
+  const grp = v('f_groupNum') || '—';
   
   if (document.getElementById('scriptName')) document.getElementById('scriptName').textContent = nm;
   if (document.getElementById('scriptMid')) document.getElementById('scriptMid').textContent = mid;
@@ -75,7 +75,7 @@ function showStep(to) {
 function handleCard(side, event) {
   const file = event.target.files[0];
   if (!file || !file.type.startsWith("image/")) {
-    alert("âš ï¸ Solo se permiten imÃ¡genes (JPG, PNG, WEBP, HEIC).");
+    alert("Only image files are allowed (JPG, PNG, WEBP, HEIC).");
     return;
   }
   State.files[side] = file;
@@ -83,15 +83,15 @@ function handleCard(side, event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const dataUrl = e.target.result;
-    State.b64[side] = dataUrl;   // guardar para el email
+    State.b64[side] = dataUrl;   // keep for email
 
-    // Mostrar vista previa
+    // Preview
     document.getElementById(`drop${cap(side)}`).style.display = "none";
     const cap_el = document.getElementById(`cap${cap(side)}`);
     cap_el.classList.add("visible");
     document.getElementById(`img${cap(side)}`).src = dataUrl;
 
-    // Mostrar botÃ³n de toggle
+    // Show toggle for extracted fields
     document.getElementById("ocrToggleSection").style.display = "block";
 
     // OCR
@@ -141,34 +141,37 @@ async function runOCR(side, dataUrl) {
   const fill  = document.getElementById(`ocr${cap(side)}Fill`);
   const label = document.getElementById(`ocr${cap(side)}Label`);
   panel.classList.add("visible");
-  label.textContent = side==="front" ? "Analizando frente de la tarjeta..." : "Analizando reverso...";
+  label.textContent = side==="front" ? "Analyzing front of card..." : "Analyzing back of card...";
   fill.style.width = "5%";
   try {
     const worker = await Tesseract.createWorker("eng+spa", 1, {
       logger: m => {
         if (m.status === "recognizing text") {
           fill.style.width = Math.round(m.progress*100)+"%";
-          label.textContent = `Extrayendo datos... ${Math.round(m.progress*100)}%`;
+          label.textContent = `Extracting text... ${Math.round(m.progress*100)}%`;
         }
       },
     });
     const { data: { text } } = await worker.recognize(dataUrl);
     await worker.terminate();
     fill.style.width  = "100%";
-    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> InformaciÃ³n extraÃ­da correctamente";
-    // Mostrar texto crudo
+    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Information extracted successfully";
+    // Raw OCR text
     const rawBlock = document.getElementById("ocrRawBlock");
     const rawArea  = document.getElementById("ocrRawText");
     if (rawBlock && rawArea) {
       rawBlock.style.display = "block";
-      rawArea.value = (rawArea.value ? rawArea.value + "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
-      if (side==="front") rawArea.value = text.trim();
-      else rawArea.value = rawArea.value + (rawArea.value ? "\n\nâ”€â”€ REVERSO â”€â”€\n" : "") + text.trim();
+      const sep = "\n\n—— BACK ——\n";
+      if (side === "front") {
+        rawArea.value = text.trim();
+      } else {
+        rawArea.value = (rawArea.value ? rawArea.value + sep : "") + text.trim();
+      }
     }
     if (side==="front") parseFront(text);
     else                parseBack(text);
   } catch(err) {
-    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Error de lectura â€” completa los datos manualmente";
+    label.innerHTML = "<span class='material-symbols-outlined'>warning</span> Read error — please enter the details manually";
     console.error("OCR error:", err);
   }
 }
@@ -683,10 +686,30 @@ function setAnswer(key, value, btn, cls) {
 
 // â”€â”€ EVALUACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function evaluar(data) {
-  const cobOK  = ["Si","Parcial"].includes(data.cobertura);
-  const authOK = data.autorizacion &&
-    (data.autorizacion.includes("Obtenida")||data.autorizacion.includes("No Requerida"));
-  return (cobOK && authOK) ? "APTO" : "NO APTO";
+  const cobOK = ["Yes", "Partial", "Si", "Parcial"].includes(data.cobertura);
+  const auth = data.autorizacion || "";
+  const authOK =
+    auth.includes("Obtained") || auth.includes("Obtenida") ||
+    auth.includes("Not required") || auth.includes("No Requerida");
+  return cobOK && authOK ? "ELIGIBLE" : "NOT ELIGIBLE";
+}
+
+function isProcedureAuthorized(data) {
+  return !!(data && data.autorizacionFinal === "AUTHORIZED");
+}
+
+function isCoverageEligible(resultado) {
+  return resultado === "ELIGIBLE" || resultado === "APTO";
+}
+
+function coverageCheckSummary(resultado) {
+  if (isCoverageEligible(resultado)) {
+    return "Eligible (from scripted call answers when provided).";
+  }
+  if (resultado === "NOT ELIGIBLE" || resultado === "NO APTO") {
+    return "Not eligible (from scripted call answers when provided).";
+  }
+  return "Incomplete or not evaluated — fill in call script answers for a full automated check.";
 }
 
 // â”€â”€ SUBIR ARCHIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -715,7 +738,7 @@ function recopilar() {
     nombre:          v("f_subscriberName") || v("f_memberName"),
     fechaNac:        v("f_dob"),
     telefono:        v("f_phone"),
-    // Seguro â€” IdentificaciÃ³n
+    // Insurance — identification
     aseguradora:     v("f_aseguradora"),
     subscriberName:  v("f_subscriberName"),
     memberName:      v("f_memberName"),
@@ -742,11 +765,11 @@ function recopilar() {
     // PCP
     pcpName:         v("f_pcpName"),
     pcpPhone:        v("f_pcpPhone"),
-    // TelÃ©fono del reverso
+    // Phone numbers from card back
     phoneSeguro:     v("f_phone"),
     phoneAuth:       v("f_phoneAuth"),
     website:         v("f_websiteBack"),
-    // Script de llamada
+    // Call script answers
     cobertura:       State.answers.q1 || "",
     autorizacion:    State.answers.q2 || "",
     referencia:      State.answers.q3 || "",
@@ -759,7 +782,7 @@ function recopilar() {
     notasRep:        v("q6notes"),
     repName:         v("repName"),
     refNum:          v("refNum"),
-    // DecisiÃ³n de autorizaciÃ³n final
+    // Final authorization decision (modal)
     autorizacionFinal: State.autorizacionFinal || "",
     // Meta
     emailDestino: "michaelandresfloreshenao@gmail.com",
@@ -769,7 +792,7 @@ function recopilar() {
 
 // â”€â”€ MODAL DE AUTORIZACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function submitForm() {
-  // Mostrar el modal de decisiÃ³n antes de proceder
+  // Show authorization decision modal before submit
   document.getElementById('authModal').classList.add('visible');
 }
 
@@ -777,13 +800,13 @@ function closeAuthModal() {
   document.getElementById('authModal').classList.remove('visible');
 }
 
-function confirmarAutorizacion(decision) {
-  State.autorizacionFinal = decision; // "AUTORIZADO" o "NO AUTORIZADO"
+function confirmAuthorization(decision) {
+  State.autorizacionFinal = decision; // AUTHORIZED | NOT AUTHORIZED
   closeAuthModal();
   _doSubmit();
 }
 
-/** Callable estándar (cloudfunctions.net). Requiere en GCP: Cloud Run invoker público para el servicio de la función. */
+/** Standard callable (cloudfunctions.net). In GCP, the function's Cloud Run service may need public invoker. */
 async function submitVerificationReportCallable(payload) {
   await ensureCallableAuth();
   const callable = functions.httpsCallable("submitVerificationReport");
@@ -792,7 +815,8 @@ async function submitVerificationReportCallable(payload) {
 
 // -- GENERATE HTML REPORT ------------------------------------
 function generateEmailHTML(data) {
-  const esApto = data.resultado === "APTO";
+  const procAuth = isProcedureAuthorized(data);
+  const covOK = isCoverageEligible(data.resultado);
   const verde  = "#10b981";
   const rojo   = "#ef4444";
   const morado = "#7c3aed";
@@ -830,30 +854,26 @@ function generateEmailHTML(data) {
   <div style="font-size:13px;color:rgba(255,255,255,0.75);">Bariatric Surgery · Automated Report</div>
 </td></tr>
 
-<!-- ELIGIBILITY -->
-<tr><td style="padding:28px 36px;text-align:center;background:${esApto?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.07)"};border-bottom:1px solid ${esApto?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"};">
-  <div style="font-size:44px;margin-bottom:10px;">${esApto?"🎉":"⚠️"}</div>
-  <div style="display:inline-block;padding:8px 24px;border-radius:99px;font-size:22px;font-weight:800;background:${esApto?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};color:${esApto?verde:rojo};border:2px solid ${esApto?verde:rojo};">
-    ${esApto?"✅ ELIGIBLE":"❌ NOT ELIGIBLE"}
+<!-- PROCEDURE AUTHORIZATION (primary) -->
+<tr><td style="padding:28px 36px;text-align:center;background:${procAuth?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.07)"};border-bottom:1px solid ${procAuth?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"};">
+  <div style="font-size:44px;margin-bottom:10px;">${procAuth?"🎉":"⚠️"}</div>
+  <div style="display:inline-block;padding:8px 24px;border-radius:99px;font-size:22px;font-weight:800;background:${procAuth?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};color:${procAuth?verde:rojo};border:2px solid ${procAuth?verde:rojo};">
+    ${procAuth?"✅ Procedure authorized":"❌ Procedure not authorized"}
   </div>
-  <p style="color:${esApto?"#a7f3d0":"#fca5a5"};font-size:14px;margin:12px 0 0;line-height:1.5;">
-    ${esApto
-      ? `<strong style="color:#fff;">${f(data.nombre)}</strong> meets the eligibility criteria for bariatric surgery.`
-      : `<strong style="color:#fff;">${f(data.nombre)}</strong> does NOT meet all the criteria at this time.`}
+  <p style="color:${procAuth?"#a7f3d0":"#fca5a5"};font-size:14px;margin:12px 0 0;line-height:1.5;">
+    ${procAuth
+      ? `<strong style="color:#fff;">${f(data.nombre)}</strong> — the procedure was authorized according to this verification.`
+      : `<strong style="color:#fff;">${f(data.nombre)}</strong> — the procedure was not authorized, or authorization was denied or still pending.`}
   </p>
 </td></tr>
 
-<!-- AUTHORIZATION DECISION -->
-<tr><td style="padding:20px 36px;text-align:center;border-bottom:1px solid #2d2d3d;">
-  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:10px;">
-    Procedure Authorization Decision
+<!-- AUTOMATED COVERAGE CHECK (secondary) -->
+<tr><td style="padding:16px 36px;text-align:center;background:rgba(30,30,46,0.55);border-bottom:1px solid #2d2d3d;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:8px;">Automated coverage check</div>
+  <div style="display:inline-block;padding:6px 16px;border-radius:99px;font-size:14px;font-weight:700;background:${covOK?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.1)"};color:${covOK?verde:rojo};border:1px solid ${covOK?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.25)"};">
+    ${covOK?"Eligible":"Not eligible"} <span style="font-weight:500;opacity:.85">(${f(data.resultado)})</span>
   </div>
-  <div style="display:inline-block;padding:10px 28px;border-radius:12px;font-size:18px;font-weight:800;
-              background:${data.autorizacionFinal==="AUTHORIZED"?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)"};
-              color:${data.autorizacionFinal==="AUTHORIZED"?verde:rojo};
-              border:2px solid ${data.autorizacionFinal==="AUTHORIZED"?verde:rojo};">
-    ${data.autorizacionFinal==="AUTHORIZED"?"✅ AUTHORIZED":"❌ NOT AUTHORIZED"}
-  </div>
+  <p style="color:#94a3b8;font-size:12px;margin:10px 0 0;line-height:1.45;">Based on scripted call answers (coverage and prior authorization fields) when provided.</p>
 </td></tr>
 
 <tr><td style="padding:28px 36px;">
@@ -932,11 +952,11 @@ ${data.rxBin||data.rxPcn||data.rxGrp ? `
 </div>
 
 <!-- VERIFICATION SCRIPT -->
-<div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${esApto?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
-  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${esApto?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
+<div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${covOK?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${covOK?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-    ${fila("1. Covered?",                 data.cobertura,      ["Si","Parcial"].includes(data.cobertura)?verde:rojo)}
-    ${fila("2. Prior Authorization?",     data.autorizacion,   data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida")?verde:rojo)}
+    ${fila("1. Covered?",                 data.cobertura,      ["Yes","Partial","Si","Parcial"].includes(data.cobertura)?verde:rojo)}
+    ${fila("2. Prior Authorization?",     data.autorizacion,   (a=>a&&(a.includes("Obtained")||a.includes("Obtenida")||a.includes("Not required")||a.includes("No Requerida")))(data.autorizacion)?verde:rojo)}
     ${fila("3. PCP Referral?",            data.referencia)}
     ${fila("4. Specific Facility?",       data.facilidad)}
     ${data.facilidadDetalle ? fila("   Facility Detail", data.facilidadDetalle) : ""}
@@ -995,15 +1015,15 @@ async function _doSubmit() {
   er.classList.remove("visible");
 
   try {
-    // Storage (reglas típicas) exige usuario autenticado; sin esto el POST falla y el navegador muestra "CORS".
+    // Storage rules often require auth; without sign-in the POST fails and the browser may show "CORS".
     await ensureCallableAuth();
     ss.querySelector("span:last-child").textContent = "Uploading card images...";
     let urlFront = "";
     let urlBack = "";
     try {
       [urlFront, urlBack] = await Promise.all([
-        uploadFile(State.files.front, "frente"),
-        uploadFile(State.files.back,  "reverso"),
+        uploadFile(State.files.front, "front"),
+        uploadFile(State.files.back,  "back"),
       ]);
     } catch (uploadErr) {
       console.warn("Storage upload failed (report email still includes embedded images):", uploadErr);
@@ -1027,13 +1047,14 @@ async function _doSubmit() {
 
     // -- Send report via Firebase callable function --
     ss.querySelector("span:last-child").textContent = "Sending report by cloud function...";
-    const subject = `[${data.resultado}] ${data.nombre || "Patient"} — Insurance Verification`;
+    const authTag = data.autorizacionFinal === "AUTHORIZED" ? "Authorized" : "Not authorized";
+    const subject = `[${authTag}] ${data.nombre || "Patient"} — Insurance verification`;
     const textBody =
       `Patient: ${data.nombre || "—"}\n` +
       `Member ID: ${data.memberId || "—"}\n` +
       `Group #: ${data.groupNum || "—"}\n` +
-      `Authorization: ${data.autorizacionFinal || "—"}\n` +
-      `Result: ${data.resultado || "—"}`;
+      `Procedure authorization: ${data.autorizacionFinal || "—"}\n` +
+      `Coverage check (automated): ${data.resultado || "—"}`;
 
     await submitVerificationReportCallable({
       subject,
@@ -1058,29 +1079,32 @@ async function _doSubmit() {
 
 // â”€â”€ RESULTADO FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showResultado(resultado, data) {
-  const esApto = resultado==="APTO";
+  const procAuth = isProcedureAuthorized(data);
   document.getElementById("progressWrapper").style.display="none";
   document.getElementById("step-2").classList.remove("active");
   document.getElementById("step-3").classList.add("active");
 
   const rc=document.getElementById("resultCard");
-  rc.className=`section-card result-card ${esApto?"result-apto":"result-noApto"}`;
+  rc.className=`section-card result-card ${procAuth?"result-apto":"result-noApto"}`;
 
   const row=(label,val,accent=false)=>`
     <div class="summary-row">
       <span class="summary-key">${label}</span>
-      <span class="summary-val${accent?" summary-accent":""}">${val||"â€”"}</span>
+      <span class="summary-val${accent?" summary-accent":""}">${val||"—"}</span>
     </div>`;
   const chip=(val,good)=>`
-    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"â€”"}</span>`;
+    <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"—"}</span>`;
 
   rc.innerHTML=`
-    <div class="result-icon-wrapper">${esApto?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
-    <div class="result-badge">${esApto?"<span class='material-symbols-outlined'>check_circle</span> APTO":"<span class='material-symbols-outlined'>cancel</span> NO APTO"}</div>
+    <div class="result-icon-wrapper">${procAuth?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
+    <div class="result-badge">${procAuth?"<span class='material-symbols-outlined'>check_circle</span> Procedure authorized":"<span class='material-symbols-outlined'>cancel</span> Procedure not authorized"}</div>
     <p class="result-message">
-      ${esApto
-        ?`<strong>${data.nombre}</strong> meets the eligibility criteria for bariatric surgery.`
-        :`<strong>${data.nombre}</strong> does NOT meet all the criteria at this time.`}
+      ${procAuth
+        ?`<strong>${data.nombre}</strong> — the insurance representative recorded that the <strong>procedure was authorized</strong> for this verification.`
+        :`<strong>${data.nombre}</strong> — the <strong>procedure was not authorized</strong>, or authorization was denied or still pending, per the information submitted.`}
+    </p>
+    <p class="result-message" style="font-size:14px;color:var(--text-secondary);margin-top:10px;">
+      <strong>Coverage check (automated):</strong> ${coverageCheckSummary(resultado)}
     </p>
 
     ${data.b64Front||data.b64Back?`
@@ -1096,7 +1120,7 @@ function showResultado(resultado, data) {
     </div>`:""}
 
     <div class="summary-table">
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">IdentificaciÃ³n del Seguro</p>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--primary-light);margin:0 0 8px;">Insurance identification</p>
       ${row("Insurance Company", data.aseguradora)}
       ${row("Subscriber Name", data.subscriberName)}
       ${row("Member Name", data.memberName)}
@@ -1121,27 +1145,27 @@ function showResultado(resultado, data) {
       ${row("RxPCN", data.rxPcn)}
       ${row("RxGroup", data.rxGrp)}
 
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Resultado de la VerificaciÃ³n</p>
-      <div class="summary-row"><span class="summary-key">ÂCovered?</span>${chip(data.cobertura,["Si","Parcial"].includes(data.cobertura))}</div>
-      <div class="summary-row"><span class="summary-key">AutorizaciÃ³n</span>${chip(data.autorizacion,data.autorizacion?.includes("Obtenida")||data.autorizacion?.includes("No Requerida"))}</div>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Verification outcome</p>
+      <div class="summary-row"><span class="summary-key">Covered?</span>${chip(data.cobertura,["Yes","Partial","Si","Parcial"].includes(data.cobertura))}</div>
+      <div class="summary-row"><span class="summary-key">Prior authorization</span>${chip(data.autorizacion,(a=>a&&(a.includes("Obtained")||a.includes("Obtenida")||a.includes("Not required")||a.includes("No Requerida")))(data.autorizacion))}</div>
       ${row("Deductible (call)", data.deducibleTotal)}
       ${row("Deductible met", data.deducibleMet)}
       ${row("Copay/Coinsurance (call)", data.copago)}
-      ${row("Out-of-Pocket MÃ¡x.", data.oopMax)}
+      ${row("Out-of-pocket max.", data.oopMax)}
       ${row("Insurance Rep", data.repName)}
       ${row("Reference #", data.refNum)}
       ${data.notasRep?`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="summary-key">Additional notes</span><span class="summary-val" style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${data.notasRep}</span></div>`:""}
-      ${row("Record ID", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId||"â€”"}</span>`)}
+      ${row("Record ID", `<span style="font-family:monospace;font-size:11px;">${data.expedienteId||"—"}</span>`)}
     </div>
 
     <div style="margin-top:18px;padding:14px 18px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-sm);text-align:center;">
-      <p style="font-size:13px;color:#34d399;margin:0;">ðŸ“§ Informe enviado automÃ¡ticamente a <strong>michaelandresfloreshenao@gmail.com</strong></p>
+      <p style="font-size:13px;color:#34d399;margin:0;">Report sent automatically to <strong>michaelandresfloreshenao@gmail.com</strong></p>
     </div>
     <button class="btn btn-secondary" style="margin-top:18px;" onclick="resetAll()">+ Evaluate New Patient</button>
   `;
 
   window.scrollTo({top:0,behavior:"smooth"});
-  if (esApto) confetti();
+  if (procAuth) confetti();
 }
 
 // â”€â”€ RESET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1152,6 +1176,7 @@ function resetAll() {
   State.b64={front:null,back:null};
   State.ocr={};
   State.answers={q1:null,q2:null,q3:null,q4:null};
+  State.autorizacionFinal=null;
   document.querySelectorAll("input,textarea").forEach(e=>{if(e.type!=="file")e.value="";});
   document.querySelectorAll(".ans-btn").forEach(b=>b.classList.remove("sel-yes","sel-no","sel-nr"));
   ["Front","Back"].forEach(s=>{
@@ -1186,7 +1211,7 @@ function confetti() {
 
 document.addEventListener("DOMContentLoaded",()=>{
   updateProgress(1);
-  console.log("âœ… MedAuth Pro â€” motor OCR multi-formato cargado");
+  console.log("MedAuth Pro — OCR engine loaded");
 });
 
 // â”€â”€ UI TOGGLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1198,7 +1223,7 @@ window.toggleOCRData = function() {
     icon.innerHTML = "Hide data <span class='material-symbols-outlined'>expand_less</span>";
   } else {
     sec.style.display = "none";
-    icon.innerHTML = "Ver datos extraÃ­dos <span class='material-symbols-outlined'>expand_more</span>";
+    icon.innerHTML = "View extracted data <span class='material-symbols-outlined'>expand_more</span>";
   }
 };
 

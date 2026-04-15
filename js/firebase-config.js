@@ -1,12 +1,12 @@
 // ============================================================
-//  CONFIGURACIÓN FIREBASE — Proyecto: datosdelpaciente-8e3ba
+//  Firebase configuration — project: datosdelpaciente-8e3ba
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBpwCXszj969xjV_WNz6ualo_g8NQ-uOy4",
   authDomain: "datosdelpaciente-8e3ba.firebaseapp.com",
   projectId: "datosdelpaciente-8e3ba",
-  // Debe coincidir con Project settings → storageBucket. Si las subidas fallan con "CORS",
-  // en la consola revisa el nombre exacto del bucket (puede ser .appspot.com o .firebasestorage.app).
+  // Must match Project settings → storageBucket. If uploads fail with "CORS",
+  // check the exact bucket name in the console (.appspot.com vs .firebasestorage.app).
   storageBucket: "datosdelpaciente-8e3ba.firebasestorage.app",
   messagingSenderId: "530903277303",
   appId: "1:530903277303:web:05c006bb85b5b4e3bcbdf2",
@@ -16,13 +16,13 @@ const firebaseConfig = {
 const STORAGE_BUCKET_LEGACY = "datosdelpaciente-8e3ba.appspot.com";
 const STORAGE_BUCKET_NEW = "datosdelpaciente-8e3ba.firebasestorage.app";
 
-// Inicializar Firebase
+// Initialize Firebase
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Segunda app solo para Storage: el bucket por defecto del proyecto es uno solo; si el config
-// apunta al nombre equivocado, el SDK usa el bucket incorrecto y el navegador muestra error CORS.
+// Second app for Storage only: the project has one default bucket; if config
+// points at the wrong name, the SDK uses the wrong bucket and the browser may show a CORS error.
 try {
   const altBucket =
     firebaseConfig.storageBucket === STORAGE_BUCKET_LEGACY ? STORAGE_BUCKET_NEW : STORAGE_BUCKET_LEGACY;
@@ -31,7 +31,7 @@ try {
   if (!/already exists|duplicate app/i.test(String(e && e.message))) console.warn(e);
 }
 
-/** Instancias de Storage a probar en orden (misma ruta de objeto en cada intento). */
+/** Storage instances to try in order (same object path for each attempt). */
 function getStorageAlternates() {
   const list = [firebase.storage()];
   try {

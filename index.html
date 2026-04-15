@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, minimum-scale=1" />
-  <title>MedAuth Pro — Verificación de Seguro Bariátrico</title>
-  <meta name="description" content="Sistema guiado de verificación de beneficios de seguro médico para cirugía bariátrica." />
+  <title>MedAuth Pro — Bariatric Surgery Insurance Verification</title>
+  <meta name="description" content="Guided workflow to verify medical insurance benefits for bariatric surgery." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,11 +20,11 @@
   <link rel="stylesheet" href="css/styles.css?v=6" />
 
   <style>
-    /* ── TARJETA DOS CARAS ── */
+    /* ── Two-sided card upload ── */
     .card-sides { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; }
     @media(max-width:640px){ .card-sides { grid-template-columns:1fr; } }
 
-    /* ── ETIQUETA DE SECCIÓN OCR ── */
+    /* ── OCR section label ── */
     .ocr-section-label {
       font-size:11px; font-weight:800; text-transform:uppercase;
       letter-spacing:.12em; margin-bottom:12px; margin-top:16px;
@@ -75,7 +75,7 @@
     .ocr-side-fill { height:100%; background:var(--accent); transition:width 0.3s ease; width:0%; }
     .ocr-side-label { font-size:12px; color:var(--accent); font-weight:600; flex:1; }
 
-    /* ── CAMPOS EXTRAÍDOS ── */
+    /* ── Extracted fields ── */
     .extracted-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     @media(max-width:640px){ .extracted-fields { grid-template-columns:1fr; } }
     .extracted-field label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); display:block; margin-bottom:5px; }
@@ -90,7 +90,7 @@
     .field-span-2 { grid-column:span 2; }
     @media(max-width:640px){ .field-span-2 { grid-column:span 1; } }
 
-    /* ── SCRIPT DE LLAMADA ── */
+    /* ── Call script ── */
     .call-card { background:linear-gradient(135deg,rgba(0, 119, 206,0.1),rgba(59,130,246,0.06)); border:1px solid rgba(0, 119, 206,0.25); border-radius:var(--radius-lg); padding:28px 28px; position:relative; overflow:hidden; }
     @media(max-width:640px){ .call-card { padding:20px 16px; border-radius:var(--radius); } }
     .call-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent)); }
@@ -129,8 +129,8 @@
     .q-en { font-size:15px; color:var(--text-primary); font-weight:600; line-height:1.4; margin-bottom:2px; font-style:italic; }
     @media(max-width:640px){ .q-en { font-size:13px; } }
     .q-en strong { font-style:normal; }
-    .q-es { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
-    @media(max-width:640px){ .q-es { font-size:11px; margin-bottom:10px; } }
+    .q-hint { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
+    @media(max-width:640px){ .q-hint { font-size:11px; margin-bottom:10px; } }
     .ans-btn { padding:10px 16px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:rgba(0,0,0,0.03); color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; min-height:44px; display:inline-flex; align-items:center; gap:6px; }
     @media(max-width:640px){
       .q-answers { gap:8px; }
@@ -398,7 +398,7 @@
     <div class="progress-wrapper" id="progressWrapper">
       <div class="progress-info">
         <span class="progress-label" id="progressLabel">Step 1 of 3</span>
-        <span class="progress-count" id="progressCount">Patient Data &amp; Insurance Card</span>
+        <span class="progress-count" id="progressCount">Patient data and insurance card</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" id="progressFill" style="width:33%"></div>
@@ -420,7 +420,7 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════
-         PASO 1 — DATOS DEL PACIENTE + TARJETA
+         STEP 1 — PATIENT DATA + INSURANCE CARD
     ═════════════════════════════════════════════════════ -->
     <div class="form-section active" id="step-1">
       <div class="section-card">
@@ -439,7 +439,7 @@
         </div>
 
 
-        <!-- DOS ZONAS DE CARGA -->
+        <!-- Two upload zones -->
         <div class="card-sides">
 
           <!-- FRONT -->
@@ -508,7 +508,7 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════
-             DATOS EXTRAÍDOS — ocultos por defecto
+             Extracted data — hidden by default
         ══════════════════════════════════════════════════ -->
         <div id="ocrToggleSection" style="display:none; margin-top:24px;">
           <button id="ocrToggleBtn" type="button" class="btn" style="width:100%; border:1px solid var(--border); background:rgba(0,0,0,0.02); display:flex; justify-content:space-between; align-items:center; color:var(--text-primary);" onclick="toggleOCRData()">
@@ -520,22 +520,22 @@
         <div id="extractedSection" style="display:none; margin-top:16px; padding:16px; border:1px solid var(--border); background:rgba(0,0,0,0.02); border-radius:10px;">
           <hr class="form-divider" />
 
-          <!-- TEXTO CRUDO OCR -->
+          <!-- Raw OCR text -->
           <div id="ocrRawBlock" style="display:none; margin-bottom:4px;">
-            <div class="ocr-section-label" style="color:#f59e0b;"><span class="material-symbols-outlined">search</span> Texto completo leído por OCR</div>
+            <div class="ocr-section-label" style="color:#f59e0b;"><span class="material-symbols-outlined">search</span> Full text read by OCR</div>
             <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.18);border-radius:10px;padding:14px;">
               <textarea id="ocrRawText" readonly rows="7"
                 style="width:100%;background:transparent;border:none;outline:none;resize:vertical;
                        font-family:monospace;font-size:12px;color:#fcd34d;line-height:1.7;box-sizing:border-box;">
               </textarea>
               <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:6px;">
-                <span class="material-symbols-outlined">info</span> Este es <strong>TODO</strong> el texto leído de la imagen. Los campos abajo se llenaron desde aquí.
-                Si ves datos no capturados, escríbelos manualmente.
+                <span class="material-symbols-outlined">info</span> This is <strong>all</strong> the text read from the image. The fields below were filled from here.
+                If anything is missing, type it in manually.
               </small>
             </div>
           </div>
 
-          <!-- 1. IDENTIFICACIÓN -->
+          <!-- 1. Identification -->
           <div class="ocr-section-label" style="color:var(--primary-light);"><span class="material-symbols-outlined">badge</span> Insurance Identification</div>
           <div class="extracted-fields">
             <div class="extracted-field field-span-2">
@@ -598,67 +598,67 @@
 
           <hr class="form-divider" style="margin:14px 0;" />
 
-          <!-- 2. COPAGOS -->
-          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">medication</span> Medical Plan Co-Pay / Copagos</div>
+          <!-- 2. Co-pays -->
+          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">medication</span> Medical plan co-pays</div>
           <div class="extracted-fields">
             <div class="extracted-field">
               <label>PCP / Primary Care Office Visit</label>
-              <input type="text" id="f_copayPCP" placeholder="Ej. $20" />
+              <input type="text" id="f_copayPCP" placeholder="e.g. $20" />
             </div>
             <div class="extracted-field">
               <label>Specialist / Specialist Office Visit</label>
-              <input type="text" id="f_copaySpec" placeholder="Ej. $40" />
+              <input type="text" id="f_copaySpec" placeholder="e.g. $40" />
             </div>
             <div class="extracted-field">
               <label>Emergency Room (ER)</label>
-              <input type="text" id="f_copayER" placeholder="Ej. $150" />
+              <input type="text" id="f_copayER" placeholder="e.g. $150" />
             </div>
             <div class="extracted-field">
               <label>Urgent Care</label>
-              <input type="text" id="f_copayUrgent" placeholder="Ej. $50" />
+              <input type="text" id="f_copayUrgent" placeholder="e.g. $50" />
             </div>
             <div class="extracted-field">
               <label>Deductible (Med/Rx)</label>
-              <input type="text" id="f_deductible" placeholder="Ej. $2,000" />
+              <input type="text" id="f_deductible" placeholder="e.g. $2,000" />
             </div>
             <div class="extracted-field">
               <label>Coinsurance (Med/Rx)</label>
-              <input type="text" id="f_coinsurance" placeholder="Ej. 20%" />
+              <input type="text" id="f_coinsurance" placeholder="e.g. 20%" />
             </div>
           </div>
 
           <hr class="form-divider" style="margin:14px 0;" />
 
-          <!-- 3. FARMACIA -->
+          <!-- 3. Pharmacy -->
           <div class="ocr-section-label" style="color:var(--secondary);"><span class="material-symbols-outlined">medication</span> Pharmacy Plan / Prescription Drugs</div>
           <div class="extracted-fields">
             <div class="extracted-field">
               <label>RxBIN / Rx BIN#</label>
-              <input type="text" id="f_rxBin" placeholder="Ej. 610097 / 008019" />
+              <input type="text" id="f_rxBin" placeholder="e.g. 610097 / 008019" />
             </div>
             <div class="extracted-field">
               <label>RxPCN / Rx PCN</label>
-              <input type="text" id="f_rxPcn" placeholder="Ej. MEDDADV" />
+              <input type="text" id="f_rxPcn" placeholder="e.g. MEDDADV" />
             </div>
             <div class="extracted-field">
               <label>RxGRP / Rx Group</label>
-              <input type="text" id="f_rxGrp" placeholder="Ej. RX1234" />
+              <input type="text" id="f_rxGrp" placeholder="e.g. RX1234" />
             </div>
             <div class="extracted-field">
               <label>Pharmacy Administrator</label>
-              <input type="text" id="f_rxAdmin" placeholder="Ej. Express Scripts" />
+              <input type="text" id="f_rxAdmin" placeholder="e.g. Express Scripts" />
             </div>
             <div class="extracted-field">
               <label>Generic Drugs copay</label>
-              <input type="text" id="f_rxGeneric" placeholder="Ej. $5" />
+              <input type="text" id="f_rxGeneric" placeholder="e.g. $5" />
             </div>
             <div class="extracted-field">
               <label>Preferred Brand Drugs copay</label>
-              <input type="text" id="f_rxBrand" placeholder="Ej. $40" />
+              <input type="text" id="f_rxBrand" placeholder="e.g. $40" />
             </div>
             <div class="extracted-field">
               <label>Non-Preferred Brand Drugs copay</label>
-              <input type="text" id="f_rxNonPref" placeholder="Ej. $75" />
+              <input type="text" id="f_rxNonPref" placeholder="e.g. $75" />
             </div>
             <div class="extracted-field">
               <label>Specialty Drugs copay</label>
@@ -699,7 +699,7 @@
 
           <hr class="form-divider" style="margin:14px 0;" />
 
-          <!-- 5. TELÉFONOS DEL REVERSO -->
+          <!-- 5. Back-of-card phones -->
           <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Back of Card Phone Numbers</div>
           <div class="extracted-fields">
             <div class="extracted-field field-span-2" style="background:rgba(0, 168, 150,0.04);border:1px solid rgba(0, 168, 150,0.25);border-radius:10px;padding:12px;">
@@ -731,7 +731,7 @@
 
           <hr class="form-divider" style="margin:14px 0;" />
 
-          <!-- 6. CAMPO LIBRE -->
+          <!-- 6. Free-form notes -->
           <div class="ocr-section-label" style="color:#f59e0b;"><span class="material-symbols-outlined">edit_note</span> Additional Card Information</div>
           <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:10px;padding:14px;">
             <label style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:8px;">
@@ -758,12 +758,12 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════
-         PASO 2 — SCRIPT DE LLAMADA
+         STEP 2 — CALL SCRIPT
     ═════════════════════════════════════════════════════ -->
     <div class="form-section" id="step-2">
       <div class="section-card call-card">
 
-        <!-- CABECERA -->
+        <!-- Header -->
         <div class="call-top">
           <span class="call-phone-emoji"><span class="material-symbols-outlined">call</span></span>
           <h2 class="call-main-title">Call your insurance company</h2>
@@ -777,7 +777,7 @@
           <div id="noPhoneNote" style="margin-top:12px;font-size:12px;color:var(--text-muted);">
             <span class="material-symbols-outlined">info</span> The phone number will appear here once you upload the back of the card
           </div>
-          <!-- Resumen del paciente -->
+          <!-- Patient summary chips -->
           <div class="patient-chips-grid">
             <div class="patient-chip">
               <div class="patient-chip-label">Patient</div>
@@ -834,7 +834,7 @@
           </div>
         </div>
 
-        <!-- 6 PREGUNTAS -->
+        <!-- Six verification questions -->
         <div class="call-section">
           <div class="call-section-tag">THEN ASK THESE 6 QUESTIONS</div>
           <div class="q-list">
@@ -844,7 +844,7 @@
               <div class="q-num">1</div>
               <div class="q-content">
                 <div class="q-en">"Is <strong>bariatric surgery</strong> covered under my plan?"</div>
-                <div class="q-es">Is bariatric surgery covered under my plan?</div>
+                <div class="q-hint">Is bariatric surgery covered under my plan?</div>
               </div>
             </div>
 
@@ -853,7 +853,7 @@
               <div class="q-num">2</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>prior authorization</strong>? If so, has it been obtained?"</div>
-                <div class="q-es">Do I need a prior authorization? Has it been obtained?</div>
+                <div class="q-hint">Do I need a prior authorization? Has it been obtained?</div>
               </div>
             </div>
 
@@ -862,7 +862,7 @@
               <div class="q-num">3</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>referral from my PCP</strong>?"</div>
-                <div class="q-es">Do I need a referral from my primary care physician?</div>
+                <div class="q-hint">Do I need a referral from my primary care physician?</div>
               </div>
             </div>
 
@@ -871,7 +871,7 @@
               <div class="q-num">4</div>
               <div class="q-content">
                 <div class="q-en">"Does the surgery have to be done at a <strong>specific hospital or facility</strong>?"</div>
-                <div class="q-es">Does the surgery have to be performed at a specific hospital?</div>
+                <div class="q-hint">Does the surgery have to be performed at a specific hospital?</div>
               </div>
             </div>
 
@@ -880,7 +880,7 @@
               <div class="q-num">5</div>
               <div class="q-content">
                 <div class="q-en">"What is my <strong>deductible</strong> and how much have I met?"</div>
-                <div class="q-es">What is my deductible and how much have I met so far?</div>
+                <div class="q-hint">What is my deductible and how much have I met so far?</div>
               </div>
             </div>
 
@@ -889,7 +889,7 @@
               <div class="q-num">6</div>
               <div class="q-content">
                 <div class="q-en">"Is there <strong>anything else</strong> I need to do to get this approved?"</div>
-                <div class="q-es">Is there anything else required to get this approved?</div>
+                <div class="q-hint">Is there anything else required to get this approved?</div>
               </div>
             </div>
 
@@ -975,7 +975,7 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════
-         PASO 3 — RESULTADO
+         STEP 3 — RESULT
     ═════════════════════════════════════════════════════ -->
     <div class="form-section" id="step-3">
       <div id="resultCard" class="section-card"></div>
@@ -1000,7 +1000,7 @@
 <script src="js/firebase-config.js"></script>
 
 <!-- ═══════════════════════════════════════════════════
-     MODAL DE AUTORIZACIÓN
+     Authorization modal
 ══════════════════════════════════════════════════════ -->
 <div id="authModal" class="auth-modal-overlay" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-modal-card">
@@ -1022,12 +1022,12 @@
 
     <!-- Choice buttons -->
     <div class="auth-modal-choices">
-      <button class="auth-btn auth-btn-yes" onclick="confirmarAutorizacion('AUTHORIZED')">
+      <button class="auth-btn auth-btn-yes" onclick="confirmAuthorization('AUTHORIZED')">
         <span class="material-symbols-outlined">check_circle</span>
         <span class="auth-btn-label">Yes, Authorized</span>
         <span class="auth-btn-sub">The insurance company approved the procedure</span>
       </button>
-      <button class="auth-btn auth-btn-no" onclick="confirmarAutorizacion('NOT AUTHORIZED')">
+      <button class="auth-btn auth-btn-no" onclick="confirmAuthorization('NOT AUTHORIZED')">
         <span class="material-symbols-outlined">cancel</span>
         <span class="auth-btn-label">Not Authorized</span>
         <span class="auth-btn-sub">The insurance company denied or pended the request</span>
@@ -1178,6 +1178,6 @@
   .auth-modal-cancel:hover { color: #64748b; }
 </style>
 
-<script src="js/app.js?v=19"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>
