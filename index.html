@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, minimum-scale=1" />
-  <title>MedAuth Pro — Bariatric Surgery Insurance Verification</title>
+  <title>MedAuth Pro — Bariatric Insurance Verification</title>
   <meta name="description" content="Guided workflow to verify medical insurance benefits for bariatric surgery." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,10 +17,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-  <link rel="stylesheet" href="css/styles.css?v=6" />
+  <link rel="stylesheet" href="css/styles.css?v=11" />
 
   <style>
-    /* ── Two-sided card upload ── */
+    /* ── TARJETA DOS CARAS ── */
     .card-sides { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; }
     @media(max-width:640px){ .card-sides { grid-template-columns:1fr; } }
 
@@ -50,14 +50,14 @@
       .card-drop-sub { font-size:10px !important; line-height:1.3; }
     }
     .card-drop input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-    .front-drop:hover,.front-drop.dragover { border-color:var(--primary); background:rgba(0, 119, 206,0.06); }
-    .back-drop:hover,.back-drop.dragover   { border-color:var(--accent);  background:rgba(0, 168, 150,0.06); }
+    .front-drop:hover,.front-drop.dragover { border-color:var(--link); background:var(--tint-link-06); }
+    .back-drop:hover,.back-drop.dragover   { border-color:var(--accent);  background:var(--tint-accent-06); }
     .card-drop-icon  { font-size:32px; }
     .card-drop-title { font-size:13px; font-weight:600; color:var(--text-primary); }
     .card-drop-sub   { font-size:11px; color:var(--text-muted); }
     .card-drop-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:10px; font-weight:600; }
-    .front-badge { background:rgba(0, 119, 206,0.12); color:var(--primary-light); border:1px solid rgba(0, 119, 206,0.25); }
-    .back-badge  { background:rgba(0, 168, 150,0.1);   color:var(--accent);        border:1px solid rgba(0, 168, 150,0.25); }
+    .front-badge { background:var(--tint-link-12); color:var(--link); border:1px solid var(--tint-link-25); }
+    .back-badge  { background:var(--tint-accent-10);   color:var(--accent-dark);        border:1px solid var(--tint-accent-25); }
 
     .captured-card { display:none; position:relative; border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--border); background:rgba(0,0,0,0.03); }
     .captured-card.visible { display:block; }
@@ -68,10 +68,10 @@
     .cap-btn.danger { border-color:rgba(239,68,68,0.4); color:var(--no-apto); }
     .cap-btn.danger:hover { background:rgba(239,68,68,0.15); }
 
-    .ocr-side-panel { margin-top:10px; background:rgba(0, 168, 150,0.05); border:1px solid rgba(0, 168, 150,0.18); border-radius:var(--radius-sm); padding:12px 14px; display:none; }
+    .ocr-side-panel { margin-top:10px; background:var(--tint-accent-06); border:1px solid var(--tint-accent-20); border-radius:var(--radius-sm); padding:12px 14px; display:none; }
     .ocr-side-panel.visible { display:block; animation:fadeSlideIn 0.3s ease; }
     .ocr-side-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .ocr-side-bar  { height:3px; background:rgba(0, 168, 150,0.15); border-radius:99px; overflow:hidden; }
+    .ocr-side-bar  { height:3px; background:var(--tint-accent-20); border-radius:99px; overflow:hidden; }
     .ocr-side-fill { height:100%; background:var(--accent); transition:width 0.3s ease; width:0%; }
     .ocr-side-label { font-size:12px; color:var(--accent); font-weight:600; flex:1; }
 
@@ -84,14 +84,14 @@
       border-radius:var(--radius-sm); padding:9px 13px; font-size:13px; color:var(--text-primary);
       font-family:'Inter',sans-serif; outline:none; transition:var(--transition); box-sizing:border-box;
     }
-    .extracted-field input:focus { border-color:var(--primary); background:rgba(0, 119, 206,0.05); }
+    .extracted-field input:focus { border-color:var(--link); background:var(--tint-link-06); }
     .extracted-field input.detected { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
-    .extracted-field input.phone-detected { border-color:rgba(0, 168, 150,0.5); background:rgba(0, 168, 150,0.06); }
+    .extracted-field input.phone-detected { border-color:var(--tint-accent-30); background:var(--tint-accent-06); }
     .field-span-2 { grid-column:span 2; }
     @media(max-width:640px){ .field-span-2 { grid-column:span 1; } }
 
-    /* ── Call script ── */
-    .call-card { background:linear-gradient(135deg,rgba(0, 119, 206,0.1),rgba(59,130,246,0.06)); border:1px solid rgba(0, 119, 206,0.25); border-radius:var(--radius-lg); padding:28px 28px; position:relative; overflow:hidden; }
+    /* ── SCRIPT DE LLAMADA ── */
+    .call-card { background:linear-gradient(135deg,var(--tint-primary-12),var(--tint-link-06)); border:1px solid var(--tint-primary-25); border-radius:var(--radius-lg); padding:28px 28px; position:relative; overflow:hidden; }
     @media(max-width:640px){ .call-card { padding:20px 16px; border-radius:var(--radius); } }
     .call-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent)); }
     .call-top { text-align:center; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid rgba(0,0,0,0.07); }
@@ -107,16 +107,16 @@
     .call-section { margin-bottom:24px; }
     .call-section-tag { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--text-muted); margin-bottom:12px; display:flex; align-items:center; gap:10px; }
     .call-section-tag::after { content:''; flex:1; height:1px; background:rgba(0,0,0,0.06); }
-    .opening-script { border-left:4px solid var(--primary); background:rgba(0, 119, 206,0.07); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; }
+    .opening-script { border-left:4px solid var(--primary); background:var(--tint-primary-08); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; }
     .opening-script p { font-size:15px; color:var(--text-primary); line-height:1.7; margin:0 0 10px; font-style:italic; }
     .opening-script p:last-child { margin:0; }
     .opening-script strong { font-style:normal; color:var(--primary-light); }
     .opening-script small { font-size:12px; color:var(--text-muted); font-style:normal; display:block; margin-top:8px; }
-    .cpt-block { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.18); border-radius:var(--radius); overflow:hidden; }
-    .cpt-item { display:flex; align-items:center; gap:16px; padding:12px 20px; border-bottom:1px solid rgba(59,130,246,0.1); transition:var(--transition); }
+    .cpt-block { background:var(--tint-link-06); border:1px solid var(--tint-link-25); border-radius:var(--radius); overflow:hidden; }
+    .cpt-item { display:flex; align-items:center; gap:16px; padding:12px 20px; border-bottom:1px solid var(--tint-link-12); transition:var(--transition); }
     .cpt-item:last-child { border-bottom:none; }
-    .cpt-item:hover { background:rgba(59,130,246,0.05); }
-    .cpt-code { font-family:'Space Grotesk',monospace; font-size:14px; font-weight:700; color:var(--secondary); min-width:75px; padding:4px 10px; background:rgba(59,130,246,0.12); border-radius:6px; text-align:center; }
+    .cpt-item:hover { background:var(--tint-link-06); }
+    .cpt-code { font-family:'Space Grotesk',monospace; font-size:14px; font-weight:700; color:var(--primary); min-width:75px; padding:4px 10px; background:var(--tint-link-12); border-radius:6px; text-align:center; }
     .cpt-name { font-size:14px; color:var(--text-primary); font-weight:500; }
     .q-list { display:flex; flex-direction:column; gap:0; }
     .q-item { display:grid; grid-template-columns:36px 1fr; gap:0 14px; padding:18px 0; border-bottom:1px solid rgba(0,0,0,0.05); align-items:start; }
@@ -126,22 +126,20 @@
       .q-num { width:30px; height:30px; font-size:12px; border-radius:6px; }
     }
     .q-num { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; margin-top:2px; }
-    .q-en { font-size:15px; color:var(--text-primary); font-weight:600; line-height:1.4; margin-bottom:2px; font-style:italic; }
+    .q-en { font-size:15px; color:var(--text-primary); font-weight:600; line-height:1.4; margin-bottom:12px; font-style:italic; }
     @media(max-width:640px){ .q-en { font-size:13px; } }
     .q-en strong { font-style:normal; }
-    .q-hint { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
-    @media(max-width:640px){ .q-hint { font-size:11px; margin-bottom:10px; } }
     .ans-btn { padding:10px 16px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background:rgba(0,0,0,0.03); color:var(--text-secondary); font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif; min-height:44px; display:inline-flex; align-items:center; gap:6px; }
     @media(max-width:640px){
       .q-answers { gap:8px; }
       .ans-btn { flex:1 1 auto; min-width:calc(50% - 4px); justify-content:center; font-size:12px; padding:10px 10px; }
     }
-    .ans-btn:hover { border-color:rgba(0, 119, 206,0.5); color:var(--text-primary); background:rgba(0, 119, 206,0.07); }
-    .ans-btn.sel-yes { border-color:var(--apto);    background:rgba(16,185,129,0.12); color:var(--apto);   font-weight:700; }
-    .ans-btn.sel-no  { border-color:var(--no-apto); background:rgba(239,68,68,0.1);   color:var(--no-apto); font-weight:700; }
-    .ans-btn.sel-nr  { border-color:var(--accent);  background:rgba(0, 168, 150,0.1);   color:var(--accent); font-weight:700; }
+    .ans-btn:hover { border-color:var(--tint-primary-40); color:var(--text-primary); background:var(--tint-primary-08); }
+    .ans-btn.sel-yes { border-color:var(--accent);    background:var(--tint-accent-12); color:var(--accent-dark);   font-weight:700; }
+    .ans-btn.sel-no  { border-color:var(--no-apto); background:rgba(197, 48, 48, 0.1);   color:var(--no-apto); font-weight:700; }
+    .ans-btn.sel-nr  { border-color:var(--accent);  background:var(--tint-accent-10);   color:var(--accent-dark); font-weight:700; }
     .q-input-field { width:100%; max-width:420px; background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.09); border-radius:8px; padding:9px 13px; font-size:13px; color:var(--text-primary); font-family:'Inter',sans-serif; outline:none; transition:var(--transition); margin-top:8px; box-sizing:border-box; }
-    .q-input-field:focus { border-color:var(--accent); background:rgba(0, 168, 150,0.05); }
+    .q-input-field:focus { border-color:var(--accent); background:var(--tint-accent-06); }
     textarea.q-input-field { resize:vertical; min-height:80px; max-width:100%; }
     .fin-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
     @media(max-width:480px){ .fin-grid { grid-template-columns:1fr; } }
@@ -301,8 +299,8 @@
       background:rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.08);
       border-radius:10px; padding:10px 14px; text-align:left;
     }
-    .patient-chip-blue { background:rgba(0, 119, 206,0.08); border-color:rgba(0, 119, 206,0.2); }
-    .patient-chip-dark { background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.2); }
+    .patient-chip-blue { background:var(--tint-link-10); border-color:var(--tint-link-25); }
+    .patient-chip-dark { background:var(--tint-primary-08); border-color:var(--tint-primary-25); }
     .patient-chip-label {
       font-size:9px; font-weight:700; text-transform:uppercase;
       letter-spacing:.1em; color:var(--text-muted); margin-bottom:4px;
@@ -341,8 +339,8 @@
       gap: 6px;
       padding: 8px 18px;
       border-radius: 99px;
-      border: 1.5px solid rgba(0,168,150,0.5);
-      background: rgba(0,168,150,0.1);
+      border: 1.5px solid var(--tint-accent-30);
+      background: var(--tint-accent-10);
       color: var(--accent);
       font-size: 12px;
       font-weight: 700;
@@ -354,7 +352,7 @@
       white-space: nowrap;
     }
     .cam-btn:hover, .cam-btn:active {
-      background: rgba(0,168,150,0.2);
+      background: var(--tint-accent-20);
       border-color: var(--accent);
       transform: scale(1.03);
     }
@@ -383,10 +381,15 @@
   <!-- ══ HEADER ══ -->
   <header class="app-header">
     <div class="logo">
-      <div class="logo-icon"><span class="material-symbols-outlined">local_hospital</span></div>
-      <div>
-        <div class="logo-text">MedAuth Pro</div>
-        <div class="logo-sub">Bariatric Surgery Insurance Verification</div>
+      <div class="logo-mark">
+        <img
+          class="logo-img"
+          src="assets/logo-bariatric-center.png"
+          alt="The Advanced Bariatric Surgery Center"
+          width="560"
+          height="280"
+          decoding="async"
+        />
       </div>
     </div>
     <div class="header-badge">System Active</div>
@@ -398,7 +401,7 @@
     <div class="progress-wrapper" id="progressWrapper">
       <div class="progress-info">
         <span class="progress-label" id="progressLabel">Step 1 of 3</span>
-        <span class="progress-count" id="progressCount">Patient data and insurance card</span>
+        <span class="progress-count" id="progressCount">Patient data &amp; insurance card</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill" id="progressFill" style="width:33%"></div>
@@ -429,7 +432,7 @@
 
         <!-- Insurance Card -->
         <div class="section-header" style="margin-bottom:6px;">
-          <div class="section-icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);"><span class="material-symbols-outlined">credit_card</span></div>
+          <div class="section-icon" style="background:linear-gradient(135deg,var(--primary),var(--link));"><span class="material-symbols-outlined">credit_card</span></div>
           <div>
             <div class="section-title" style="font-size:18px;">Insurance Card</div>
             <p class="section-subtitle">
@@ -508,7 +511,7 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════
-             Extracted data — hidden by default
+             Extracted data — hidden until expanded
         ══════════════════════════════════════════════════ -->
         <div id="ocrToggleSection" style="display:none; margin-top:24px;">
           <button id="ocrToggleBtn" type="button" class="btn" style="width:100%; border:1px solid var(--border); background:rgba(0,0,0,0.02); display:flex; justify-content:space-between; align-items:center; color:var(--text-primary);" onclick="toggleOCRData()">
@@ -598,32 +601,32 @@
 
           <hr class="form-divider" style="margin:14px 0;" />
 
-          <!-- 2. Co-pays -->
-          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">medication</span> Medical plan co-pays</div>
+          <!-- 2. Copays -->
+          <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">medication</span> Medical plan copays</div>
           <div class="extracted-fields">
             <div class="extracted-field">
               <label>PCP / Primary Care Office Visit</label>
-              <input type="text" id="f_copayPCP" placeholder="e.g. $20" />
+              <input type="text" id="f_copayPCP" placeholder="E.g. $20" />
             </div>
             <div class="extracted-field">
               <label>Specialist / Specialist Office Visit</label>
-              <input type="text" id="f_copaySpec" placeholder="e.g. $40" />
+              <input type="text" id="f_copaySpec" placeholder="E.g. $40" />
             </div>
             <div class="extracted-field">
               <label>Emergency Room (ER)</label>
-              <input type="text" id="f_copayER" placeholder="e.g. $150" />
+              <input type="text" id="f_copayER" placeholder="E.g. $150" />
             </div>
             <div class="extracted-field">
               <label>Urgent Care</label>
-              <input type="text" id="f_copayUrgent" placeholder="e.g. $50" />
+              <input type="text" id="f_copayUrgent" placeholder="E.g. $50" />
             </div>
             <div class="extracted-field">
               <label>Deductible (Med/Rx)</label>
-              <input type="text" id="f_deductible" placeholder="e.g. $2,000" />
+              <input type="text" id="f_deductible" placeholder="E.g. $2,000" />
             </div>
             <div class="extracted-field">
               <label>Coinsurance (Med/Rx)</label>
-              <input type="text" id="f_coinsurance" placeholder="e.g. 20%" />
+              <input type="text" id="f_coinsurance" placeholder="E.g. 20%" />
             </div>
           </div>
 
@@ -634,31 +637,31 @@
           <div class="extracted-fields">
             <div class="extracted-field">
               <label>RxBIN / Rx BIN#</label>
-              <input type="text" id="f_rxBin" placeholder="e.g. 610097 / 008019" />
+              <input type="text" id="f_rxBin" placeholder="E.g. 610097 / 008019" />
             </div>
             <div class="extracted-field">
               <label>RxPCN / Rx PCN</label>
-              <input type="text" id="f_rxPcn" placeholder="e.g. MEDDADV" />
+              <input type="text" id="f_rxPcn" placeholder="E.g. MEDDADV" />
             </div>
             <div class="extracted-field">
               <label>RxGRP / Rx Group</label>
-              <input type="text" id="f_rxGrp" placeholder="e.g. RX1234" />
+              <input type="text" id="f_rxGrp" placeholder="E.g. RX1234" />
             </div>
             <div class="extracted-field">
               <label>Pharmacy Administrator</label>
-              <input type="text" id="f_rxAdmin" placeholder="e.g. Express Scripts" />
+              <input type="text" id="f_rxAdmin" placeholder="E.g. Express Scripts" />
             </div>
             <div class="extracted-field">
               <label>Generic Drugs copay</label>
-              <input type="text" id="f_rxGeneric" placeholder="e.g. $5" />
+              <input type="text" id="f_rxGeneric" placeholder="E.g. $5" />
             </div>
             <div class="extracted-field">
               <label>Preferred Brand Drugs copay</label>
-              <input type="text" id="f_rxBrand" placeholder="e.g. $40" />
+              <input type="text" id="f_rxBrand" placeholder="E.g. $40" />
             </div>
             <div class="extracted-field">
               <label>Non-Preferred Brand Drugs copay</label>
-              <input type="text" id="f_rxNonPref" placeholder="e.g. $75" />
+              <input type="text" id="f_rxNonPref" placeholder="E.g. $75" />
             </div>
             <div class="extracted-field">
               <label>Specialty Drugs copay</label>
@@ -702,7 +705,7 @@
           <!-- 5. Back-of-card phones -->
           <div class="ocr-section-label" style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Back of Card Phone Numbers</div>
           <div class="extracted-fields">
-            <div class="extracted-field field-span-2" style="background:rgba(0, 168, 150,0.04);border:1px solid rgba(0, 168, 150,0.25);border-radius:10px;padding:12px;">
+            <div class="extracted-field field-span-2" style="background:var(--tint-accent-06);border:1px solid var(--tint-accent-25);border-radius:10px;padding:12px;">
               <label style="color:var(--accent);"><span class="material-symbols-outlined">call</span> Member Services ★ — main number to call</label>
               <input type="tel" id="f_phone" placeholder="Member Services number from card back" />
               <small style="font-size:11px;color:var(--text-muted);display:block;margin-top:5px;">This number will appear in the Call Script on Step 2</small>
@@ -834,7 +837,7 @@
           </div>
         </div>
 
-        <!-- Six verification questions -->
+        <!-- Six questions to ask -->
         <div class="call-section">
           <div class="call-section-tag">THEN ASK THESE 6 QUESTIONS</div>
           <div class="q-list">
@@ -844,7 +847,6 @@
               <div class="q-num">1</div>
               <div class="q-content">
                 <div class="q-en">"Is <strong>bariatric surgery</strong> covered under my plan?"</div>
-                <div class="q-hint">Is bariatric surgery covered under my plan?</div>
               </div>
             </div>
 
@@ -853,7 +855,6 @@
               <div class="q-num">2</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>prior authorization</strong>? If so, has it been obtained?"</div>
-                <div class="q-hint">Do I need a prior authorization? Has it been obtained?</div>
               </div>
             </div>
 
@@ -862,7 +863,6 @@
               <div class="q-num">3</div>
               <div class="q-content">
                 <div class="q-en">"Do I need a <strong>referral from my PCP</strong>?"</div>
-                <div class="q-hint">Do I need a referral from my primary care physician?</div>
               </div>
             </div>
 
@@ -871,7 +871,6 @@
               <div class="q-num">4</div>
               <div class="q-content">
                 <div class="q-en">"Does the surgery have to be done at a <strong>specific hospital or facility</strong>?"</div>
-                <div class="q-hint">Does the surgery have to be performed at a specific hospital?</div>
               </div>
             </div>
 
@@ -880,7 +879,6 @@
               <div class="q-num">5</div>
               <div class="q-content">
                 <div class="q-en">"What is my <strong>deductible</strong> and how much have I met?"</div>
-                <div class="q-hint">What is my deductible and how much have I met so far?</div>
               </div>
             </div>
 
@@ -889,7 +887,6 @@
               <div class="q-num">6</div>
               <div class="q-content">
                 <div class="q-en">"Is there <strong>anything else</strong> I need to do to get this approved?"</div>
-                <div class="q-hint">Is there anything else required to get this approved?</div>
               </div>
             </div>
 
@@ -954,7 +951,7 @@
         </div>
 
         <!-- STATUS / SEND -->
-        <div id="statusSending" style="display:none;text-align:center;padding:18px;background:rgba(0, 119, 206,0.08);border:1px solid rgba(0, 119, 206,0.2);border-radius:12px;margin-bottom:14px;">
+        <div id="statusSending" style="display:none;text-align:center;padding:18px;background:var(--tint-link-10);border:1px solid var(--tint-link-25);border-radius:12px;margin-bottom:14px;">
           <div class="ocr-spinner" style="margin:0 auto 10px;"></div>
           <span style="font-size:14px;color:var(--primary-light);">Processing...</span>
         </div>
@@ -1000,7 +997,7 @@
 <script src="js/firebase-config.js"></script>
 
 <!-- ═══════════════════════════════════════════════════
-     Authorization modal
+     Authorization confirmation modal
 ══════════════════════════════════════════════════════ -->
 <div id="authModal" class="auth-modal-overlay" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-modal-card">
@@ -1080,22 +1077,22 @@
     position: absolute;
     top:0; left:0; right:0;
     height: 4px;
-    background: linear-gradient(90deg, #ef4444, #f59e0b, #0077ce);
+    background: linear-gradient(90deg, #ef4444, #f59e0b, var(--accent));
     border-radius: 20px 20px 0 0;
   }
   .auth-modal-icon {
     width: 64px; height: 64px;
     margin: 0 auto 16px;
-    background: linear-gradient(135deg, rgba(0,119,206,0.12), rgba(59,130,246,0.08));
+    background: linear-gradient(135deg, var(--tint-primary-12), var(--tint-link-10));
     border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 34px; color: #0077ce;
+    font-size: 34px; color: var(--primary);
   }
   .auth-modal-title {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 20px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0 0 10px;
     line-height: 1.3;
   }
@@ -1105,7 +1102,7 @@
     line-height: 1.6;
     margin: 0 0 24px;
   }
-  .auth-modal-sub strong { color: #0f172a; }
+  .auth-modal-sub strong { color: var(--text-primary); }
   .auth-modal-choices {
     display: flex;
     gap: 12px;
@@ -1141,15 +1138,15 @@
     opacity: .8;
   }
   .auth-btn-yes {
-    background: rgba(16,185,129,0.08);
-    border-color: rgba(16,185,129,0.3);
-    color: #059669;
+    background: var(--tint-accent-10);
+    border-color: var(--tint-accent-30);
+    color: var(--accent-dark);
   }
   .auth-btn-yes:hover {
-    background: rgba(16,185,129,0.18);
-    border-color: #10b981;
+    background: var(--tint-accent-12);
+    border-color: var(--accent);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(16,185,129,0.2);
+    box-shadow: 0 8px 20px var(--tint-accent-25);
   }
   .auth-btn-no {
     background: rgba(239,68,68,0.07);
@@ -1167,7 +1164,7 @@
     align-items: center;
     gap: 4px;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-muted);
     background: none;
     border: none;
     cursor: pointer;
@@ -1175,9 +1172,9 @@
     border-radius: 99px;
     transition: color .15s;
   }
-  .auth-modal-cancel:hover { color: #64748b; }
+  .auth-modal-cancel:hover { color: var(--text-secondary); }
 </style>
 
-<script src="js/app.js?v=21"></script>
+<script src="js/app.js?v=22"></script>
 </body>
 </html>

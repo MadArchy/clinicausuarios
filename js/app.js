@@ -1,7 +1,6 @@
 /* ============================================================
-   APP.JS — Multi-format OCR for medical insurance cards
-   Supports: Ambetter, Amerigroup, BlueCross, Christus, Molina,
-   and other common Texas / US insurers
+   MedAuth Pro — client-side OCR for US insurance cards
+   (Ambetter, Amerigroup, BCBS, Christus, Molina, and similar)
    ============================================================ */
 "use strict";
 
@@ -17,9 +16,9 @@ const State = {
 };
 
 const STEP_LABELS = [
-  { label:"Patient data and insurance card", pct:33  },
-  { label:"Insurance call script",             pct:66  },
-  { label:"Final result",                         pct:100 },
+  { label: "Patient data & insurance card", pct: 33 },
+  { label: "Insurance call script", pct: 66 },
+  { label: "Final result", pct: 100 },
 ];
 
 // â”€â”€ NAVEGACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -141,21 +140,21 @@ async function runOCR(side, dataUrl) {
   const fill  = document.getElementById(`ocr${cap(side)}Fill`);
   const label = document.getElementById(`ocr${cap(side)}Label`);
   panel.classList.add("visible");
-  label.textContent = side==="front" ? "Analyzing front of card..." : "Analyzing back of card...";
+  label.textContent = side === "front" ? "Reading front of card..." : "Reading back of card...";
   fill.style.width = "5%";
   try {
     const worker = await Tesseract.createWorker("eng+spa", 1, {
       logger: m => {
         if (m.status === "recognizing text") {
-          fill.style.width = Math.round(m.progress*100)+"%";
-          label.textContent = `Extracting text... ${Math.round(m.progress*100)}%`;
+          fill.style.width = Math.round(m.progress * 100) + "%";
+          label.textContent = `Extracting text... ${Math.round(m.progress * 100)}%`;
         }
       },
     });
     const { data: { text } } = await worker.recognize(dataUrl);
     await worker.terminate();
     fill.style.width  = "100%";
-    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Information extracted successfully";
+    label.innerHTML = "<span class='material-symbols-outlined'>check_circle</span> Data extracted successfully";
     // Raw OCR text
     const rawBlock = document.getElementById("ocrRawBlock");
     const rawArea  = document.getElementById("ocrRawText");
@@ -1145,7 +1144,7 @@ function showResultado(resultado, data) {
       ${row("RxPCN", data.rxPcn)}
       ${row("RxGroup", data.rxGrp)}
 
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Verification outcome</p>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin:14px 0 8px;">Verification call results</p>
       <div class="summary-row"><span class="summary-key">Covered?</span>${chip(data.cobertura,["Yes","Partial","Si","Parcial"].includes(data.cobertura))}</div>
       <div class="summary-row"><span class="summary-key">Prior authorization</span>${chip(data.autorizacion,(a=>a&&(a.includes("Obtained")||a.includes("Obtenida")||a.includes("Not required")||a.includes("No Requerida")))(data.autorizacion))}</div>
       ${row("Deductible (call)", data.deducibleTotal)}
@@ -1200,7 +1199,7 @@ function resetAll() {
 // â”€â”€ CONFETTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function confetti() {
   const c=document.getElementById("confettiContainer");
-  const cols=["#0077ce","#10b981","#3b82f6","#f59e0b","#ec4899","#06b6d4"];
+  const cols=["#1E3A5F","#2FA4A9","#4A90E2","#f59e0b","#ec4899","#279399"];
   for(let i=0;i<80;i++){
     const p=document.createElement("div"); p.className="confetti-piece";
     p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?"50%":"2px"};`;
@@ -1211,7 +1210,7 @@ function confetti() {
 
 document.addEventListener("DOMContentLoaded",()=>{
   updateProgress(1);
-  console.log("MedAuth Pro — OCR engine loaded");
+  console.log("MedAuth Pro — OCR module ready");
 });
 
 // â”€â”€ UI TOGGLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
