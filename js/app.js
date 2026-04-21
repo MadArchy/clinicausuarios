@@ -12,7 +12,6 @@ const State = {
   b64:     { front: null, back: null },        // base64 for email attachment
   ocr:     {},                                  // raw extracted OCR payload
   answers: { q1:null, q2:null, q3:null, q4:null },
-  autorizacionFinal: null,                      // modal decision
 };
 
 const STEP_LABELS = [
@@ -693,24 +692,6 @@ function evaluar(data) {
   return cobOK && authOK ? "ELIGIBLE" : "NOT ELIGIBLE";
 }
 
-function isProcedureAuthorized(data) {
-  return !!(data && data.autorizacionFinal === "AUTHORIZED");
-}
-
-function isCoverageEligible(resultado) {
-  return resultado === "ELIGIBLE" || resultado === "APTO";
-}
-
-function coverageCheckSummary(resultado) {
-  if (isCoverageEligible(resultado)) {
-    return "Eligible (from scripted call answers when provided).";
-  }
-  if (resultado === "NOT ELIGIBLE" || resultado === "NO APTO") {
-    return "Not eligible (from scripted call answers when provided).";
-  }
-  return "Incomplete or not evaluated — fill in call script answers for a full automated check.";
-}
-
 // â”€â”€ SUBIR ARCHIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function uploadFile(file, side) {
   if (!file) return null;
@@ -781,27 +762,13 @@ function recopilar() {
     notasRep:        v("q6notes"),
     repName:         v("repName"),
     refNum:          v("refNum"),
-    // Final authorization decision (modal)
-    autorizacionFinal: State.autorizacionFinal || "",
     // Meta
     emailDestino: "michaelandresfloreshenao@gmail.com",
     fecha: new Date(),
   };
 }
 
-// â”€â”€ MODAL DE AUTORIZACIÃ“N â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function submitForm() {
-  // Show authorization decision modal before submit
-  document.getElementById('authModal').classList.add('visible');
-}
-
-function closeAuthModal() {
-  document.getElementById('authModal').classList.remove('visible');
-}
-
-function confirmAuthorization(decision) {
-  State.autorizacionFinal = decision; // AUTHORIZED | NOT AUTHORIZED
-  closeAuthModal();
   _doSubmit();
 }
 
@@ -812,12 +779,27 @@ async function submitVerificationReportCallable(payload) {
   return callable(payload);
 }
 
+/** Prefer HTTPS Storage URL — Gmail often strips large inline data: URLs from img src. */
+function pickCardImageSrc(dataUrlB64, storageUrl) {
+  const url = String(storageUrl || "").trim();
+  if (/^https?:\/\//i.test(url)) return url;
+  return String(dataUrlB64 || "").trim();
+}
+
+function escapeHtmlAttr(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
+function emailCardImgTag(src, alt) {
+  if (!src) {
+    return `<div style="width:100%;height:100px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
+  }
+  const safe = escapeHtmlAttr(src);
+  return `<img src="${safe}" alt="${alt}" style="width:100%;max-width:280px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;"/>`;
+}
+
 // -- GENERATE HTML REPORT ------------------------------------
 function generateEmailHTML(data) {
-  const procAuth = isProcedureAuthorized(data);
-  const covOK = isCoverageEligible(data.resultado);
-  const verde  = "#10b981";
-  const rojo   = "#ef4444";
   const morado = "#7c3aed";
   const azul   = "#3b82f6";
 
@@ -830,12 +812,14 @@ function generateEmailHTML(data) {
                  font-weight:${color?"700":"400"};">${f(valor)}</td>
     </tr>`;
 
-  const imgFront = data.b64Front
-    ? `<img src="${data.b64Front}" alt="Front of card" style="width:100%;max-width:280px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;"/>`
-    : `<div style="width:100%;height:100px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
-  const imgBack = data.b64Back
-    ? `<img src="${data.b64Back}" alt="Back of card" style="width:100%;max-width:280px;border-radius:8px;border:2px solid #2d2d3d;display:block;margin:0 auto;"/>`
-    : `<div style="width:100%;height:100px;background:#1e1e2e;border:1px dashed #334155;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:12px;">No image</div>`;
+  const imgFront = emailCardImgTag(
+    pickCardImageSrc(data.b64Front, data.urlFrente),
+    "Front of card"
+  );
+  const imgBack = emailCardImgTag(
+    pickCardImageSrc(data.b64Back, data.urlReverso),
+    "Back of card"
+  );
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -850,29 +834,7 @@ function generateEmailHTML(data) {
 <tr><td style="background:linear-gradient(135deg,#7c3aed,#3b82f6);padding:32px 36px;text-align:center;">
   <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,0.7);margin-bottom:8px;">MedAuth Pro</div>
   <div style="font-size:26px;font-weight:800;color:#fff;margin:0 0 6px;letter-spacing:-.02em;">Medical Insurance Verification</div>
-  <div style="font-size:13px;color:rgba(255,255,255,0.75);">Bariatric Surgery · Automated Report</div>
-</td></tr>
-
-<!-- PROCEDURE AUTHORIZATION (primary) -->
-<tr><td style="padding:28px 36px;text-align:center;background:${procAuth?"rgba(16,185,129,0.08)":"rgba(239,68,68,0.07)"};border-bottom:1px solid ${procAuth?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"};">
-  <div style="font-size:44px;margin-bottom:10px;">${procAuth?"🎉":"⚠️"}</div>
-  <div style="display:inline-block;padding:8px 24px;border-radius:99px;font-size:22px;font-weight:800;background:${procAuth?"rgba(16,185,129,0.15)":"rgba(239,68,68,0.12)"};color:${procAuth?verde:rojo};border:2px solid ${procAuth?verde:rojo};">
-    ${procAuth?"✅ Procedure authorized":"❌ Procedure not authorized"}
-  </div>
-  <p style="color:${procAuth?"#a7f3d0":"#fca5a5"};font-size:14px;margin:12px 0 0;line-height:1.5;">
-    ${procAuth
-      ? `<strong style="color:#fff;">${f(data.nombre)}</strong> — the procedure was authorized according to this verification.`
-      : `<strong style="color:#fff;">${f(data.nombre)}</strong> — the procedure was not authorized, or authorization was denied or still pending.`}
-  </p>
-</td></tr>
-
-<!-- AUTOMATED COVERAGE CHECK (secondary) -->
-<tr><td style="padding:16px 36px;text-align:center;background:rgba(30,30,46,0.55);border-bottom:1px solid #2d2d3d;">
-  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:8px;">Automated coverage check</div>
-  <div style="display:inline-block;padding:6px 16px;border-radius:99px;font-size:14px;font-weight:700;background:${covOK?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.1)"};color:${covOK?verde:rojo};border:1px solid ${covOK?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.25)"};">
-    ${covOK?"Eligible":"Not eligible"} <span style="font-weight:500;opacity:.85">(${f(data.resultado)})</span>
-  </div>
-  <p style="color:#94a3b8;font-size:12px;margin:10px 0 0;line-height:1.45;">Based on scripted call answers (coverage and prior authorization fields) when provided.</p>
+  <div style="font-size:13px;color:rgba(255,255,255,0.75);">Bariatric Surgery · Verification report</div>
 </td></tr>
 
 <tr><td style="padding:28px 36px;">
@@ -951,11 +913,11 @@ ${data.rxBin||data.rxPcn||data.rxGrp ? `
 </div>
 
 <!-- VERIFICATION SCRIPT -->
-<div style="margin-bottom:24px;background:#1e1e2e;border:1px solid ${covOK?"rgba(16,185,129,0.25)":"rgba(239,68,68,0.2)"};border-radius:12px;padding:20px;">
-  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:${covOK?verde:rojo};margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
+<div style="margin-bottom:24px;background:#1e1e2e;border:1px solid #2d2d3d;border-radius:12px;padding:20px;">
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#94a3b8;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2d2d3d;">📋 Verification Call Results</div>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-    ${fila("1. Covered?",                 data.cobertura,      ["Yes","Partial","Si","Parcial"].includes(data.cobertura)?verde:rojo)}
-    ${fila("2. Prior Authorization?",     data.autorizacion,   (a=>a&&(a.includes("Obtained")||a.includes("Obtenida")||a.includes("Not required")||a.includes("No Requerida")))(data.autorizacion)?verde:rojo)}
+    ${fila("1. Covered?",                 data.cobertura,      "")}
+    ${fila("2. Prior Authorization?",     data.autorizacion,   "")}
     ${fila("3. PCP Referral?",            data.referencia)}
     ${fila("4. Specific Facility?",       data.facilidad)}
     ${data.facilidadDetalle ? fila("   Facility Detail", data.facilidadDetalle) : ""}
@@ -1046,20 +1008,23 @@ async function _doSubmit() {
 
     // -- Send report via Firebase callable function --
     ss.querySelector("span:last-child").textContent = "Sending report by cloud function...";
-    const authTag = data.autorizacionFinal === "AUTHORIZED" ? "Authorized" : "Not authorized";
-    const subject = `[${authTag}] ${data.nombre || "Patient"} — Insurance verification`;
+    const subject = `MedAuth Pro — ${data.nombre || "Patient"} — Insurance verification`;
     const textBody =
       `Patient: ${data.nombre || "—"}\n` +
       `Member ID: ${data.memberId || "—"}\n` +
       `Group #: ${data.groupNum || "—"}\n` +
-      `Procedure authorization: ${data.autorizacionFinal || "—"}\n` +
-      `Coverage check (automated): ${data.resultado || "—"}`;
+      `Script summary (automated): ${data.resultado || "—"}`;
+
+    // Omit base64 blobs from callable payload — HTML already embeds images; halves request size.
+    const reportForCallable = Object.fromEntries(
+      Object.entries(data).filter(([k]) => !k.startsWith("b64"))
+    );
 
     await submitVerificationReportCallable({
       subject,
       text: textBody,
       html_report: generateEmailHTML(data),
-      report: data,
+      report: reportForCallable,
     });
 
     ss.classList.remove("visible");
@@ -1078,13 +1043,12 @@ async function _doSubmit() {
 
 // â”€â”€ RESULTADO FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showResultado(resultado, data) {
-  const procAuth = isProcedureAuthorized(data);
   document.getElementById("progressWrapper").style.display="none";
   document.getElementById("step-2").classList.remove("active");
   document.getElementById("step-3").classList.add("active");
 
   const rc=document.getElementById("resultCard");
-  rc.className=`section-card result-card ${procAuth?"result-apto":"result-noApto"}`;
+  rc.className="section-card result-card result-apto";
 
   const row=(label,val,accent=false)=>`
     <div class="summary-row">
@@ -1095,26 +1059,21 @@ function showResultado(resultado, data) {
     <span class="chip ${good?"chip-si":"chip-no"}">${good?"<span class='material-symbols-outlined'>check_circle</span>":"<span class='material-symbols-outlined'>cancel</span>"} ${val||"—"}</span>`;
 
   rc.innerHTML=`
-    <div class="result-icon-wrapper">${procAuth?"<span class='material-symbols-outlined'>celebration</span>":"<span class='material-symbols-outlined'>warning</span>"}</div>
-    <div class="result-badge">${procAuth?"<span class='material-symbols-outlined'>check_circle</span> Procedure authorized":"<span class='material-symbols-outlined'>cancel</span> Procedure not authorized"}</div>
+    <div class="result-icon-wrapper"><span class="material-symbols-outlined">mark_email_read</span></div>
+    <div class="result-badge"><span class="material-symbols-outlined">check_circle</span> Report sent</div>
     <p class="result-message">
-      ${procAuth
-        ?`<strong>${data.nombre}</strong> — the insurance representative recorded that the <strong>procedure was authorized</strong> for this verification.`
-        :`<strong>${data.nombre}</strong> — the <strong>procedure was not authorized</strong>, or authorization was denied or still pending, per the information submitted.`}
-    </p>
-    <p class="result-message" style="font-size:14px;color:var(--text-secondary);margin-top:10px;">
-      <strong>Coverage check (automated):</strong> ${coverageCheckSummary(resultado)}
+      Verification report for <strong>${data.nombre || "Patient"}</strong> was saved and emailed to <strong>michaelandresfloreshenao@gmail.com</strong>.
     </p>
 
-    ${data.b64Front||data.b64Back?`
+    ${pickCardImageSrc(data.b64Front, data.urlFrente) || pickCardImageSrc(data.b64Back, data.urlReverso) ? `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
-      ${data.b64Front?`<div>
+      ${pickCardImageSrc(data.b64Front, data.urlFrente) ? `<div>
         <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:0 0 6px;">Front</p>
-        <img src="${data.b64Front}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card front"/>
+        <img src="${escapeHtmlAttr(pickCardImageSrc(data.b64Front, data.urlFrente))}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card front"/>
       </div>`:"<div></div>"}
-      ${data.b64Back?`<div>
+      ${pickCardImageSrc(data.b64Back, data.urlReverso) ? `<div>
         <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin:0 0 6px;">Back</p>
-        <img src="${data.b64Back}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card back"/>
+        <img src="${escapeHtmlAttr(pickCardImageSrc(data.b64Back, data.urlReverso))}" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="Card back"/>
       </div>`:"<div></div>"}
     </div>`:""}
 
@@ -1164,7 +1123,6 @@ function showResultado(resultado, data) {
   `;
 
   window.scrollTo({top:0,behavior:"smooth"});
-  if (procAuth) confetti();
 }
 
 // â”€â”€ RESET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1175,7 +1133,6 @@ function resetAll() {
   State.b64={front:null,back:null};
   State.ocr={};
   State.answers={q1:null,q2:null,q3:null,q4:null};
-  State.autorizacionFinal=null;
   document.querySelectorAll("input,textarea").forEach(e=>{if(e.type!=="file")e.value="";});
   document.querySelectorAll(".ans-btn").forEach(b=>b.classList.remove("sel-yes","sel-no","sel-nr"));
   ["Front","Back"].forEach(s=>{
@@ -1194,18 +1151,6 @@ function resetAll() {
   document.getElementById("step-1").classList.add("active");
   updateProgress(1);
   window.scrollTo({top:0,behavior:"smooth"});
-}
-
-// â”€â”€ CONFETTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function confetti() {
-  const c=document.getElementById("confettiContainer");
-  const cols=["#1E3A5F","#2FA4A9","#4A90E2","#f59e0b","#ec4899","#279399"];
-  for(let i=0;i<80;i++){
-    const p=document.createElement("div"); p.className="confetti-piece";
-    p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?"50%":"2px"};`;
-    c.appendChild(p);
-  }
-  setTimeout(()=>c.innerHTML="",6000);
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
